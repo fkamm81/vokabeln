@@ -115,7 +115,7 @@ $("#btnSelfOk").onclick=()=>{reviewOutcome(4);addXP(4);cheer();nextCard();};
 
 // MATCH
 function buildMatch(){
-  const pool=poolItems().slice().sort(()=>Math.random()-0.5).slice(0,8);
+  const pool=poolItems().slice().sort(()=>Math.random()-0.5).slice(0,5);
   if(!pool.length){$("#matchGrid").textContent='Bitte passende Daten importieren.';return;}
   const [qField,aField]=fieldsForMode(); const left=pool.map(x=>({id:x.id,t:x[qField]})); const right=pool.map(x=>({id:x.id,t:x[aField]})).sort(()=>Math.random()-0.5);
   const wrap=$("#matchGrid"); wrap.innerHTML=''; let selectedLeft=null; const solved=new Set();
@@ -156,7 +156,7 @@ $("#btnCheckWrite").onclick=()=>{
 $("#writeInput").addEventListener('keydown',e=>{ if(e.key==='Enter') $("#btnCheckWrite").click(); });
 
 // Tabs
-$("#tabs").onclick=(e)=>{const t=e.target.closest('.tab'); if(!t) return; $$('.tab').forEach(x=>x.classList.remove('active')); t.classList.add('active'); state.mode=t.dataset.tab; $$('.activity').forEach(x=>x.classList.add('hidden')); $('#'+state.mode).classList.remove('hidden'); if(state.mode==='quiz') buildQuiz(); if(state.mode==='match') buildMatch(); if(state.mode==='write') setTimeout(()=>$("#writeInput")?.focus(),50); save();};
+$("#tabs").onclick=(e)=>{const t=e.target.closest('.tab'); if(!t) return; $$('.tab').forEach(x=>x.classList.remove('active')); t.classList.add('active'); state.mode=t.dataset.tab; $$('.activity').forEach(x=>x.classList.add('hidden')); $('#'+state.mode).classList.remove('hidden'); if(state.mode==='listen'){ nextCard('listen'); } if(state.mode==='speak'){ nextCard('speak'); } if(state.mode==='quiz') buildQuiz(); if(state.mode==='match') buildMatch(); if(state.mode==='write') setTimeout(()=>$("#writeInput")?.focus(),50); save();};
 
 // Lang/book/lessons
 $("#langSelect").onchange=e=>{state.lang=e.target.value; save(); populateLessons(); buildDue(); nextCard(); if(state.mode==='quiz') buildQuiz(); if(state.mode==='match') buildMatch();};
@@ -194,3 +194,14 @@ function renderProgress(){const list=$("#progressList"); if(!list) return; list.
 
 function init(){applyTheme(state.theme); populateBooks(); populateLangSelect(); populateLessons(); refreshKpis(); buildDue(); nextCard(); setTimeout(cheer,1000);}
 init();
+
+
+// Filters collapse with chevron toggle
+const fbtn = $("#btnFilters");
+fbtn.addEventListener('click', ()=>{
+  const box = $("#filters");
+  const open = !box.classList.contains('open');
+  box.classList.toggle('open', open);
+  fbtn.textContent = open ? '▴' : '▾';
+});
+
