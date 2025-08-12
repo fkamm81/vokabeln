@@ -1,7 +1,7 @@
 {
-  "name": "Vokabelhelden – v7 (Bücher, Themes, Profile)",
+  "name": "Vokabelhelden – v8",
   "short_name": "Vokabelhelden",
-  "description": "Vokabel-PWA für Latein & Englisch mit Büchern, Themes, Profilen, XP/Streak, Spaced Repetition in allen Modi & Offline.",
+  "description": "Vokabel-PWA (Latein & Englisch) mit SRS in allen Modi.",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#0b132b",

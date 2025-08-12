@@ -1,13 +1,12 @@
 <!doctype html>
-<html lang="de">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#3a86ff" />
-  <title>Vokabelhelden – Latein & Englisch</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="styles.css">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+<html lang="de"><head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#3a86ff" />
+<title>Vokabelhelden – Latein & Englisch</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="styles.css">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 </head>
 <body>
 <div id="app">
@@ -25,10 +24,7 @@
 
   <main>
     <div class="panel grid" id="topbar">
-      <div id="filtersToggle">
-        <div><strong>Filter</strong></div>
-        <button id="btnFilters" class="smallbtn">Einblenden</button>
-      </div>
+      <div id="filtersToggle"><div><strong>Filter</strong></div><button id="btnFilters" class="iconbtn">⤵️</button></div>
       <div id="filters">
         <div class="controls">
           <select id="bookSelect" title="Buch"></select>
@@ -101,20 +97,17 @@
   <footer>
     <div>📱 Als App installieren</div>
     <div style="display:flex; gap:8px;">
-      <button id="btnTheme" class="smallbtn iconbtn" title="Theme">🎨</button>
-      <button id="btnParent" class="smallbtn iconbtn" title="Elternbereich">👨‍👧‍👦</button>
+      <button id="btnTheme" class="iconbtn" title="Theme">🎨</button>
+      <button id="btnParent" class="iconbtn" title="Elternbereich">👨‍👧‍👦</button>
     </div>
   </footer>
 </div>
 
-<!-- Elternbereich Modal -->
 <div id="parentModal" class="modal hidden" aria-modal="true" role="dialog">
   <div class="box">
     <div class="big">Elternbereich</div>
     <div class="row">
-      <label>Aktives Kind:
-        <select id="kidSelect"></select>
-      </label>
+      <label>Aktives Kind:<select id="kidSelect"></select></label>
       <button id="btnAddKid">Kind hinzufügen</button>
     </div>
     <div class="row">
@@ -122,45 +115,34 @@
         <div class="big">Import</div>
         <div class="row">
           <input id="bookName" type="text" placeholder="Buchtitel (z.B. Adeamus 1)">
-          <select id="baseLang">
-            <option value="latin">Buchsprache: Latein</option>
-            <option value="english">Buchsprache: Englisch</option>
-          </select>
+          <select id="baseLang"><option value="latin">Buchsprache: Latein</option><option value="english">Buchsprache: Englisch</option></select>
         </div>
         <div class="row">
           <input id="fileInput" type="file" accept=".csv,.json">
           <button id="btnImport" class="smallbtn">Importieren</button>
         </div>
         <div id="importStatus" class="hint"></div>
-        <div class="hint">Jeder Import wird mit Buch & Sprache getaggt. Lektionen werden automatisch erkannt.</div>
       </div>
       <div class="panel" style="flex:1">
         <div class="big">Tägliches Ziel</div>
         <div class="row">
-          <label>Lektionen (kommasep.): <input id="goalLessons" type="text" placeholder="z.B. 1,2"></label>
+          <label>Lektionen: <input id="goalLessons" type="text" placeholder="z.B. 1,2"></label>
           <label>Minuten: <input id="goalMinutes" type="number" min="5" step="5" value="15"></label>
           <label class="switch"><input id="reminders" type="checkbox"> Tägliche Erinnerung 17:00</label>
         </div>
         <button id="btnSaveGoal">Speichern</button>
-        <div class="hint">Ziel gilt pro Tag und pro Kind.</div>
       </div>
     </div>
     <div class="panel">
       <div class="big">Fortschritt</div>
       <div id="progressList" class="list"></div>
     </div>
-    <div class="row" style="justify-content:flex-end">
-      <button id="btnCloseParent">Schließen</button>
-    </div>
+    <div class="row" style="justify-content:flex-end"><button id="btnCloseParent">Schließen</button></div>
   </div>
 </div>
 
-<!-- Theme mini popup -->
-<div id="themePopup" class="hidden">
-  <div class="theme-mini" id="themeDots"></div>
-</div>
+<div id="themePopup" class="hidden"><div class="theme-mini" id="themeDots"></div></div>
 
 <script src="app.js"></script>
-<script> if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); } </script>
-</body>
-</html>
+<script> if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); } </script>
+</body></html>
