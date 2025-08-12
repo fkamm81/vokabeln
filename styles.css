@@ -111,3 +111,25 @@ footer{ position: relative; z-index: 10; }
 #themePopup{ z-index: 110; }
 .modal{ z-index: 120; }
 .toast{ pointer-events:none; } /* safety */
+
+
+/* --- Debug banner --- */
+#dbgBanner{
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,.7);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity .15s ease;
+  pointer-events: none;
+  max-width: 90vw;
+  text-align: center;
+  backdrop-filter: blur(4px);
+}
+#dbgBanner.show{ opacity: 1; }

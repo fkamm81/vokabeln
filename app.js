@@ -217,6 +217,7 @@ document.addEventListener('click', (ev) => {
   // Filter toggle
   const btnFilters = t.closest && t.closest('#btnFilters');
   if (btnFilters) {
+    dbg('Filter: Klick');
     const box = document.getElementById('filters');
     if (box) {
       const open = !box.classList.contains('open');
@@ -230,6 +231,7 @@ document.addEventListener('click', (ev) => {
   // Theme popup
   const btnTheme = t.closest && t.closest('#btnTheme');
   if (btnTheme) {
+    dbg('Theme: Klick');
     const pop = document.getElementById('themePopup');
     if (pop) {
       if (pop.classList.contains('hidden')) openThemePopup(); else closeThemePopup();
@@ -240,6 +242,7 @@ document.addEventListener('click', (ev) => {
   // Parent modal
   const btnParent = t.closest && t.closest('#btnParent');
   if (btnParent) {
+    dbg('Elternbereich: Klick');
     const modal = document.getElementById('parentModal');
     if (modal) {
       modal.classList.remove('hidden');
@@ -250,7 +253,8 @@ document.addEventListener('click', (ev) => {
   }
 
   // Close theme popup when clicking outside
-  const pop = document.getElementById('themePopup');
+  dbg('Theme: Klick');
+    const pop = document.getElementById('themePopup');
   if (pop && !pop.classList.contains('hidden')) {
     if (!pop.contains(t) && !t.closest('#btnTheme')) { closeThemePopup(); }
   }
