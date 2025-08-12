@@ -2,7 +2,7 @@
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
-const DBKEY = 'vocab-helden-v2';
+const DBKEY = 'vocab-helden-v3';
 const state = {
   data: [], // {id, book, base:'latin'|'english', lesson, de, la, en}
   mode: 'flash',
@@ -59,7 +59,6 @@ function applyTheme(id){
     el.style.background = 'var(--btn)';
     el.style.color = 'var(--text)';
   });
-  renderThemePills();
 }
 function renderThemePills(){
   const wrap = $("#themePills"); if (!wrap) return;
@@ -73,7 +72,7 @@ function renderThemePills(){
   });
 }
 
-// Toast + Mascot
+// Toast + Mascot (top)
 const QUOTES = [
   ["turtle","Langsam ist auch schnell – Schritt für Schritt!"],
   ["frog","Sprung! Ein Punkt mehr in Richtung Meisterschaft!"],
@@ -87,7 +86,7 @@ function toast(msg, mascotId='turtle') {
   t.className = 'toast';
   t.innerHTML = `<div class="msg"><svg><use href="assets/mascots.svg#${mascotId}"/></svg><div>${msg}</div></div>`;
   document.body.appendChild(t);
-  setTimeout(()=>t.remove(), 1800);
+  setTimeout(()=>t.remove(), 1200);
 }
 function cheer() {
   const [id, text] = QUOTES[Math.floor(Math.random()*QUOTES.length)];
@@ -138,16 +137,43 @@ function normalize(records, book, base) {
   return norm;
 }
 function allBooks(){ return [...new Set(state.data.map(d=>d.book))].filter(Boolean).sort(); }
+function baseForMode(){ return (state.lang.startsWith('latin'))?'latin':'english'; }
+
+function populateLangOptions(){
+  const sel = $("#langSelect");
+  sel.innerHTML = '';
+  const base = currentBookBase(); // 'latin' or 'english' or null
+  const options = [];
+  if (base === 'latin') options.push(['latin','Latein → Deutsch'], ['latin_rev','Deutsch → Latein']);
+  if (base === 'english') options.push(['english','Englisch → Deutsch'], ['english_rev','Deutsch → Englisch']);
+  // Fallback if no book yet
+  if (!options.length) options.push(['latin','Latein → Deutsch'], ['latin_rev','Deutsch → Latein'], ['english','Englisch → Deutsch'], ['english_rev','Deutsch → Englisch']);
+  for (const [val, label] of options){
+    const o = document.createElement('option'); o.value = val; o.textContent = label; sel.appendChild(o);
+  }
+  if (!options.some(o=>o[0]===state.lang)) state.lang = options[0][0];
+  sel.value = state.lang;
+}
+
+function currentBookBase(){
+  // infer from first item of selected book
+  const items = state.data.filter(d=>d.book===state.book);
+  if (!items.length) return null;
+  return items[0].base;
+}
+
 function populateBooks(){
   const sel = $("#bookSelect"); sel.innerHTML='';
   const books = allBooks();
-  if (!books.length){ state.book = null; const opt = document.createElement('option'); opt.textContent='(kein Buch)'; sel.appendChild(opt); return; }
+  if (!books.length){ state.book = null; const opt = document.createElement('option'); opt.textContent='(kein Buch)'; sel.appendChild(opt); populateLangOptions(); return; }
   books.forEach(b=>{
     const opt = document.createElement('option'); opt.value=b; opt.textContent=b; sel.appendChild(opt);
   });
   if (!state.book || !books.includes(state.book)) state.book = books[0];
   sel.value = state.book;
+  populateLangOptions();
 }
+
 function populateLessons(){
   const sel = $("#lessonSelect"); sel.innerHTML='';
   const pool = state.data.filter(d=> d.book===state.book && baseForMode()===d.base);
@@ -202,7 +228,6 @@ function addXP(n=5) {
 }
 
 // SR helpers
-function baseForMode(){ return (state.lang.startsWith('latin'))?'latin':'english'; }
 function fieldsForMode() {
   switch(state.lang){
     case 'latin': return ['la', 'de'];
@@ -251,11 +276,15 @@ function reviewOutcome(quality) {
   nextCard();
 }
 
-// Fuzzy checking
+// Fuzzy & multi-meaning checking
 function normalizeText(t){
   return (t||'').toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
     .replace(/[^a-zäöüß \-]/g,'').replace(/\s+/g,' ').trim();
+}
+function stripArticles(t){
+  const a = normalizeText(t);
+  return a.replace(/^(der|die|das|den|dem|des|ein|eine|einen|einem|einer|the|a|an)\s+/,'').trim();
 }
 function levenshtein(a,b){
   a = normalizeText(a); b = normalizeText(b);
@@ -275,12 +304,18 @@ function levenshtein(a,b){
   return dp[n];
 }
 function isFuzzyMatch(ans, want){
-  const A = normalizeText(ans), W = normalizeText(want);
+  const A = stripArticles(ans), W = stripArticles(want);
   if (!A || !W) return false;
   if (A===W) return true;
   const d = levenshtein(A,W);
   const tol = Math.max(1, Math.floor(W.length*0.2));
   return d <= tol;
+}
+function anyMeaningMatch(ans, wanted){
+  // wanted may contain multiple meanings separated by comma/semicolon/slash
+  const parts = (wanted||'').split(/[,;/]/).map(s=>s.trim()).filter(Boolean);
+  if (!parts.length) return isFuzzyMatch(ans, wanted);
+  return parts.some(p => isFuzzyMatch(ans, p));
 }
 
 // Activities
@@ -298,6 +333,8 @@ function nextCard() {
   $("#flashCard").dataset.answer = pick[aField] || '–';
   $("#writePrompt").textContent = (pick[qField] ? `Schreibe die Übersetzung von: “${pick[qField]}”` : 'Schreiben');
   $("#listenPrompt").textContent = (pick[qField] ? `🎧 Höre zu und übersetze: “${pick[qField]}”` : '🎧');
+  if (state.mode==='write'){ const inp=$("#writeInput"); inp && inp.focus(); inp && (inp.value=''); }
+  if (state.mode==='listen'){ const inp=$("#listenInput"); inp && inp.focus(); inp && (inp.value=''); }
 }
 
 $("#btnShow").addEventListener('click', ()=>{
@@ -308,6 +345,7 @@ $("#btnEasy").addEventListener('click', ()=> reviewOutcome(5));
 $("#btnGood").addEventListener('click', ()=> reviewOutcome(4));
 $("#btnHard").addEventListener('click', ()=> reviewOutcome(2));
 
+// Quiz with visual feedback
 function buildQuiz() {
   const pool = poolItems();
   if (pool.length < 4) { $("#quizPrompt").textContent="Bitte mehr Vokabeln importieren."; $("#quizOptions").innerHTML=''; return; }
@@ -321,8 +359,9 @@ function buildQuiz() {
   wrap.innerHTML = '';
   for (const opt of shuffled) {
     const b = document.createElement('button'); b.textContent = opt; b.addEventListener('click', ()=>{
-      if (isFuzzyMatch(opt, correct[aField])) { addXP(5); cheer(); buildQuiz(); }
-      else { toast('Knapp daneben – weiter!', 'sheep'); }
+      const ok = anyMeaningMatch(opt, correct[aField]);
+      b.classList.add(ok?'btn-correct':'btn-incorrect');
+      setTimeout(()=>{ b.classList.remove('btn-correct','btn-incorrect'); if (ok){ addXP(5); cheer(); buildQuiz(); } else { toast('Knapp daneben – weiter!', 'sheep'); } }, 500);
     });
     wrap.appendChild(b);
   }
@@ -343,9 +382,13 @@ $("#btnSpeak").addEventListener('click', ()=>{
   speak(state.current[qField], langCode);
 });
 $("#btnCheckListen").addEventListener('click', ()=>{
-  const ans = $("#listenInput").value;
+  const input = $("#listenInput");
+  const ans = input.value;
   const want = (state.current?.[fieldsForMode()[1]]||'');
-  if (isFuzzyMatch(ans, want)) { addXP(6); cheer(); $("#listenInput").value=''; nextCard(); }
+  const ok = anyMeaningMatch(ans, want);
+  input.classList.add(ok?'btn-correct':'btn-incorrect');
+  setTimeout(()=>{ input.classList.remove('btn-correct','btn-incorrect'); }, 500);
+  if (ok) { addXP(6); cheer(); input.value=''; nextCard(); }
   else toast(`Gesucht: ${want}`, 'frog');
 });
 
@@ -362,7 +405,7 @@ $("#btnStartRec").addEventListener('click', ()=>{
 $("#btnStopRec").addEventListener('click', ()=>{ try{ rec && rec.stop(); }catch{} });
 $("#btnSelfOk").addEventListener('click', ()=>{ addXP(4); cheer(); });
 
-// Match
+// Match with button feedback
 function buildMatch() {
   const pool = poolItems().slice().sort(()=>Math.random()-0.5).slice(0,6);
   if (!pool.length){ $("#matchGrid").textContent='Bitte passende Daten importieren.'; return; }
@@ -371,21 +414,35 @@ function buildMatch() {
   const right = pool.map(x=>({id:x.id, t:x[aField]})).sort(()=>Math.random()-0.5);
   const wrap = $("#matchGrid");
   wrap.innerHTML = '';
-  const sel = {L:null, R:null};
+  const sel = {L:null, R:null, Lbtn:null, Rbtn:null};
+  function handlePair(){
+    if (sel.L && sel.R){
+      const ok = sel.L === sel.R;
+      sel.Lbtn.classList.add(ok?'btn-correct':'btn-incorrect');
+      sel.Rbtn.classList.add(ok?'btn-correct':'btn-incorrect');
+      setTimeout(()=>{
+        sel.Lbtn.classList.remove('btn-correct','btn-incorrect');
+        sel.Rbtn.classList.remove('btn-correct','btn-incorrect');
+        if (ok){
+          addXP(3); cheer();
+          sel.Lbtn.remove(); sel.Rbtn.remove();
+          if (!wrap.querySelector('[data-id]')) buildMatch();
+        } else {
+          toast('Nicht ganz – probier weiter!', 'sheep');
+        }
+        sel.L = sel.R = null; sel.Lbtn = sel.Rbtn = null;
+      }, 500);
+    }
+  }
   function renderSide(items, side){
     const col = document.createElement('div');
     col.style.display='grid'; col.style.gap='8px';
     for (const it of items) {
-      const b = document.createElement('button'); b.textContent = it.t; b.dataset.id = it.id; b.addEventListener('click',()=>{
-        sel[side] = it.id;
-        b.classList.add('badge');
-        if (sel.L && sel.R) {
-          if (sel.L === sel.R) { addXP(3); cheer();
-            wrap.querySelectorAll(`[data-id="${sel[side]}"]`).forEach(el=>el.remove());
-          } else { toast('Nicht ganz – probier weiter!', 'sheep'); $$('#matchGrid .badge').forEach(x=>x.classList.remove('badge')); }
-          sel.L = sel.R = null;
-          if (!wrap.querySelector('[data-id]')) buildMatch();
-        }
+      const b = document.createElement('button'); b.textContent = it.t; b.dataset.id = it.id;
+      b.addEventListener('click',()=>{
+        if (side==='L'){ sel.L = it.id; sel.Lbtn = b; }
+        else{ sel.R = it.id; sel.Rbtn = b; }
+        handlePair();
       });
       col.appendChild(b);
     }
@@ -398,13 +455,19 @@ function buildMatch() {
   wrap.appendChild(cont);
 }
 
-// Write
+// Write with autofocus & feedback & multi-meaning
 $("#btnCheckWrite").addEventListener('click', ()=>{
-  const ans = $("#writeInput").value;
+  const input = $("#writeInput");
+  const ans = input.value;
   const want = (state.current?.[fieldsForMode()[1]]||'');
-  if (isFuzzyMatch(ans, want)) { addXP(6); cheer(); $("#writeInput").value=''; nextCard(); }
+  const ok = anyMeaningMatch(ans, want);
+  input.classList.add(ok?'btn-correct':'btn-incorrect');
+  setTimeout(()=> input.classList.remove('btn-correct','btn-incorrect'), 500);
+  if (ok) { addXP(6); cheer(); input.value=''; nextCard(); }
   else toast(`Gesucht: ${want}`, 'frog');
 });
+// Enter to check
+$("#writeInput").addEventListener('keydown', (e)=>{ if (e.key==='Enter'){ e.preventDefault(); $("#btnCheckWrite").click(); } });
 
 // Tabs
 $("#tabs").addEventListener('click', (e)=>{
@@ -415,17 +478,24 @@ $("#tabs").addEventListener('click', (e)=>{
   $('#'+state.mode).classList.remove('hidden');
   if (state.mode==='quiz') buildQuiz();
   if (state.mode==='match') buildMatch();
+  if (state.mode==='write'){ const inp=$("#writeInput"); inp && inp.focus(); }
+  if (state.mode==='listen'){ const inp=$("#listenInput"); inp && inp.focus(); }
   save();
 });
 
 // Language, book, lessons
 $("#langSelect").addEventListener('change', (e)=>{ state.lang = e.target.value; save(); populateLessons(); buildDue(); nextCard(); if (state.mode==='quiz') buildQuiz(); if (state.mode==='match') buildMatch(); });
-$("#bookSelect").addEventListener('change', (e)=>{ state.book = e.target.value; save(); populateLessons(); buildDue(); nextCard(); if (state.mode==='quiz') buildQuiz(); if (state.mode==='match') buildMatch(); });
+$("#bookSelect").addEventListener('change', (e)=>{ state.book = e.target.value; save(); populateLangOptions(); populateLessons(); buildDue(); nextCard(); if (state.mode==='quiz') buildQuiz(); if (state.mode==='match') buildMatch(); });
 $("#lessonSelect").addEventListener('change', ()=>{ buildDue(); nextCard(); if (state.mode==='quiz') buildQuiz(); if (state.mode==='match') buildMatch(); });
 
-// Footer parent button + modal
-$("#btnParent").addEventListener('click', ()=>{ $("#parentModal").classList.remove('hidden'); renderParent(); });
-$("#btnCloseParent").addEventListener('click', ()=> $("#parentModal").classList.add('hidden'));
+// Footer buttons + modals
+function openModal(id){ $(id).classList.remove('hidden'); document.body.classList.add('no-scroll'); }
+function closeModal(id){ $(id).classList.add('hidden'); document.body.classList.remove('no-scroll'); }
+
+$("#btnParent").addEventListener('click', ()=>{ openModal("#parentModal"); renderParent(); });
+$("#btnCloseParent").addEventListener('click', ()=> closeModal("#parentModal"));
+$("#btnTheme").addEventListener('click', ()=>{ openModal("#themeModal"); renderThemePills(); });
+$("#btnCloseTheme").addEventListener('click', ()=> closeModal("#themeModal"));
 
 // Parent modal
 function renderParent(){
@@ -437,6 +507,7 @@ function renderParent(){
   $("#goalLessons").value = (P().goals.lessons||[]).join(', ');
   $("#goalMinutes").value = P().goals.minutes||15;
   $("#reminders").checked = !!P().scheduleNoti;
+  $("#importHint").textContent = 'Bereit.';
   renderProgress();
 }
 $("#kidSelect").addEventListener('change', (e)=>{ setKid(e.target.value); });
@@ -465,21 +536,31 @@ $("#btnImport").addEventListener('click', async ()=>{
   const book = $("#bookName").value.trim();
   const base = $("#baseLang").value;
   if (!file || !book) { toast('Datei und Buchname angeben.', 'sheep'); return; }
-  const text = await file.text();
-  let records = [];
-  if (file.name.endsWith('.json')) { records = JSON.parse(text); } else { records = parseCSV(text); }
-  const items = normalize(records, book, base);
-  if (!items.length) { toast('Konnte keine Vokabeln erkennen.', 'sheep'); return; }
-  const key = (o)=> [o.book, o.base, o.de||'', o.la||'', o.en||''].join('|');
-  const existing = new Set(state.data.map(key));
-  let added = 0;
-  for (const it of items) if (!existing.has(key(it))) { state.data.push(it); added++; }
-  save();
-  populateBooks();
-  $("#bookSelect").value = book; state.book = book;
-  populateLessons();
-  buildDue(); nextCard();
-  toast(`Import ok: ${added} Einträge`, 'turtle');
+  $("#btnImport").disabled = true;
+  const old = $("#btnImport").textContent; $("#btnImport").textContent = 'Importiere…';
+  $("#importHint").textContent = 'Import läuft…';
+  try{
+    const text = await file.text();
+    let records = [];
+    if (file.name.endsWith('.json')) { records = JSON.parse(text); } else { records = parseCSV(text); }
+    const items = normalize(records, book, base);
+    if (!items.length) { toast('Konnte keine Vokabeln erkennen.', 'sheep'); return; }
+    const key = (o)=> [o.book, o.base, o.de||'', o.la||'', o.en||''].join('|');
+    const existing = new Set(state.data.map(key));
+    let added = 0;
+    for (const it of items) if (!existing.has(key(it))) { state.data.push(it); added++; }
+    save();
+    populateBooks();
+    $("#bookSelect").value = book; state.book = book;
+    populateLangOptions();
+    populateLessons();
+    buildDue(); nextCard();
+    $("#importHint").textContent = `Import ok: ${added} Einträge`;
+    toast(`Import ok: ${added} Einträge`, 'turtle');
+  }finally{
+    $("#btnImport").disabled = false;
+    $("#btnImport").textContent = old;
+  }
 });
 
 function renderProgress() {
@@ -500,12 +581,11 @@ function renderProgress() {
 // Init
 function init(){
   applyTheme(state.theme);
-  const sel = $("#themePills");
   populateBooks();
   populateLessons();
   refreshKpis();
   buildDue();
   nextCard();
-  setTimeout(cheer, 1000);
+  setTimeout(cheer, 800);
 }
 init();

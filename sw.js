@@ -1,5 +1,5 @@
 
-const CACHE = 'vocab-pwa-v2';
+const CACHE = 'vocab-pwa-v3';
 const ASSETS = [
   './',
   './index.html',

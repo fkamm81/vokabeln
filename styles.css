@@ -23,6 +23,7 @@ body{
   font-family:var(--font);
   -webkit-font-smoothing:antialiased;
 }
+body.no-scroll{overflow:hidden;}
 #app{display:grid; grid-template-rows:auto 1fr auto; height:100svh; max-width:820px; margin:0 auto;}
 header, footer{padding:12px 16px;}
 header{display:flex; align-items:center; justify-content:space-between;}
@@ -53,7 +54,8 @@ button:active{transform:translateY(1px)}
 .tabs{display:flex; gap:6px; flex-wrap:wrap}
 .tab{padding:8px 12px; border-radius:12px; background:#0d1b2a; cursor:pointer}
 .tab.active{background:var(--accent); color:#001030; font-weight:800}
-.toast{position:fixed; inset:auto 0 10px 0; display:grid; place-items:center; pointer-events:none; z-index:99}
+/* Toast on top */
+.toast{position:fixed; inset:8px 8px auto 8px; display:grid; place-items:center; pointer-events:none; z-index:99}
 .toast .msg{background:#081427; border:2px solid #29436e; padding:12px 16px; border-radius:14px; display:flex; gap:10px; align-items:center}
 .msg svg{width:28px; height:28px}
 .list{max-height:40vh; overflow:auto; padding-right:6px}
@@ -63,12 +65,19 @@ footer{display:flex; gap:12px; flex-wrap:wrap; justify-content:space-between; al
 footer .smallbtn{background:#0d1b2a; border:1px solid #29436e; border-radius:12px; padding:8px 10px; min-height:auto; font-size:14px}
 footer .iconbtn{width:42px; height:42px; display:grid; place-items:center; border-radius:12px}
 .hidden{display:none !important}
-/* Theme selector */
-.theme-row{display:flex; gap:8px; flex-wrap:wrap}
-.theme-pill{border:2px solid #243b63; padding:6px 10px; border-radius:999px; cursor:pointer; background:#0d1b2a}
-.theme-pill.active{background:var(--accent); color:#001030; font-weight:800}
+
+/* Feedback outlines */
+.btn-correct{box-shadow:0 0 0 3px var(--ok) inset, 0 0 0 3px var(--ok);}
+.btn-incorrect{box-shadow:0 0 0 3px var(--warn) inset, 0 0 0 3px var(--warn);}
+
 /* Modal */
 .modal{position:fixed; inset:0; display:grid; place-items:center; background:rgba(0,0,0,.4); z-index:100}
-.modal > .box{background:var(--panel); border-radius:18px; padding:16px; width:min(96vw,520px); box-shadow:var(--shadow)}
+.modal > .box{background:var(--panel); border-radius:18px; padding:16px; width:min(96vw,520px); max-height:90vh; overflow:auto; box-shadow:var(--shadow)}
 .modal .row{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px}
+
+/* Theme modal minimal */
+.theme-row{display:flex; gap:8px; flex-wrap:wrap; justify-content:center}
+.theme-pill{border:2px solid #243b63; padding:6px 10px; border-radius:999px; cursor:pointer; background:#0d1b2a}
+.theme-pill.active{background:var(--accent); color:#001030; font-weight:800}
+
 @media (min-width:700px){ .actions{grid-template-columns:repeat(4,1fr)} }

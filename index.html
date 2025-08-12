@@ -27,14 +27,8 @@
     <div class="panel grid" id="topbar">
       <div class="controls">
         <select id="bookSelect" title="Buch"></select>
-        <select id="langSelect" title="Übungsrichtung">
-          <option value="latin">Latein → Deutsch</option>
-          <option value="latin_rev">Deutsch → Latein</option>
-          <option value="english">Englisch → Deutsch</option>
-          <option value="english_rev">Deutsch → Englisch</option>
-        </select>
+        <select id="langSelect" title="Übungsrichtung"></select>
         <select id="lessonSelect" multiple size="1" title="Lektionen"></select>
-        <div id="themePills" class="theme-row"></div>
       </div>
     </div>
 
@@ -98,8 +92,9 @@
   </main>
 
   <footer>
-    <div>📱 Als App installieren</div>
+    <div>📱 Installieren</div>
     <div style="display:flex; gap:8px;">
+      <button id="btnTheme" class="smallbtn iconbtn" title="Theme">🎨</button>
       <button id="btnParent" class="smallbtn iconbtn" title="Elternbereich">👨‍👧‍👦</button>
     </div>
   </footer>
@@ -129,7 +124,7 @@
           <input id="fileInput" type="file" accept=".csv,.json">
           <button id="btnImport" class="smallbtn">Importieren</button>
         </div>
-        <div class="hint">Jeder Import wird mit Buch & Sprache getaggt. Lektionen werden automatisch erkannt.</div>
+        <div class="hint" id="importHint">Bereit.</div>
       </div>
       <div class="panel" style="flex:1">
         <div class="big">Tägliches Ziel</div>
@@ -148,6 +143,17 @@
     </div>
     <div class="row" style="justify-content:flex-end">
       <button id="btnCloseParent">Schließen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Theme Modal -->
+<div id="themeModal" class="modal hidden">
+  <div class="box">
+    <div class="big">Theme wählen</div>
+    <div id="themePills" class="theme-row"></div>
+    <div class="row" style="justify-content:flex-end">
+      <button id="btnCloseTheme">Fertig</button>
     </div>
   </div>
 </div>
