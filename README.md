@@ -1,10 +1,13 @@
 
-# Vokabelhelden v3 – UX‑Verbesserungen
+# Vokabelhelden v3 – Fixes & Feinschliff
 
-- Import bestätigt (Button disabled + Status + Toast)
-- Elternbereich scrollt eigenständig, Hintergrund ist gesperrt
-- Theme‑Picker als kleines 🎨‑Icon unten → eigenes Mini‑Popup
-- Sprachkombinationen oben werden dynamisch zum Buch gefiltert
-- Toast erscheint oben mit Maskottchen
-- Quiz & Zuordnen: kurzer Grün/Rot‑Rahmen als Feedback
-- Schreiben: Cursor auto‑Fokus; besseres Feedback; mehrere Bedeutungen gültig; Artikel optional
+**Neu/Fix:**
+- Quiz: stabiler Rundendurchlauf, korrekte Auswertung nach jeder Runde, Buttons kurz grün/rot umrandet.
+- Zuordnen: Linke Auswahl bleibt sichtbar markiert, bis ein rechter Treffer gewählt wird.
+- Schreiben: Prompt „Was bedeutet …?“, Feedback **im Kasten** inkl. vollständiger Lösung; bei richtig wird „Prüfen“ zu „Weiter“. Eingabefeld fokussiert automatisch; Enter sendet.
+- Mehrdeutigkeiten: Komma/Slash/Semikolon/„oder/or“ – jede Variante zählt. Artikel (der/die/das/ein/eine/the/a/an) sind optional. Fuzzy‑Toleranz bleibt.
+- Import: sichtbarer Status + Toast, Button deaktiviert während des Imports.
+- Elternbereich: eigener Scroll, Hintergrund gesperrt.
+- Theme: kleines 🎨‑Popup unten rechts.
+
+Viel Spaß! 🐢 🐸 🐑

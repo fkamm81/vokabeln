@@ -29,6 +29,7 @@
         <select id="bookSelect" title="Buch"></select>
         <select id="langSelect" title="Übungsrichtung"></select>
         <select id="lessonSelect" multiple size="1" title="Lektionen"></select>
+        <button id="btnTheme" class="smallbtn" title="Theme">🎨</button>
       </div>
     </div>
 
@@ -59,7 +60,7 @@
       </section>
 
       <section class="activity hidden" id="listen">
-        <div class="card big" id="listenPrompt">🎧 Wir sprechen dir das Wort vor. Schreib die Übersetzung.</div>
+        <div class="card big" id="listenPrompt">🎧 Höre zu und übersetze…</div>
         <input id="listenInput" type="text" placeholder="Antwort tippen…">
         <div class="actions">
           <button id="btnSpeak">Nochmal anhören 🔊</button>
@@ -82,7 +83,7 @@
       </section>
 
       <section class="activity hidden" id="write">
-        <div class="card big"><div id="writePrompt">Schreibe die Übersetzung:</div></div>
+        <div class="card big" id="writeCard"><div id="writePrompt">Was bedeutet …?</div><div id="writeFeedback" class="hint"></div></div>
         <input id="writeInput" type="text" placeholder="Antwort">
         <div class="actions">
           <button id="btnCheckWrite" class="wide">Prüfen</button>
@@ -92,16 +93,15 @@
   </main>
 
   <footer>
-    <div>📱 Installieren</div>
+    <div>📱 Als App installieren</div>
     <div style="display:flex; gap:8px;">
-      <button id="btnTheme" class="smallbtn iconbtn" title="Theme">🎨</button>
       <button id="btnParent" class="smallbtn iconbtn" title="Elternbereich">👨‍👧‍👦</button>
     </div>
   </footer>
 </div>
 
 <!-- Elternbereich Modal -->
-<div id="parentModal" class="modal hidden">
+<div id="parentModal" class="modal hidden" aria-modal="true" role="dialog">
   <div class="box">
     <div class="big">Elternbereich</div>
     <div class="row">
@@ -124,7 +124,8 @@
           <input id="fileInput" type="file" accept=".csv,.json">
           <button id="btnImport" class="smallbtn">Importieren</button>
         </div>
-        <div class="hint" id="importHint">Bereit.</div>
+        <div id="importStatus" class="hint"></div>
+        <div class="hint">Jeder Import wird mit Buch & Sprache getaggt. Lektionen werden automatisch erkannt.</div>
       </div>
       <div class="panel" style="flex:1">
         <div class="big">Tägliches Ziel</div>
@@ -147,15 +148,9 @@
   </div>
 </div>
 
-<!-- Theme Modal -->
-<div id="themeModal" class="modal hidden">
-  <div class="box">
-    <div class="big">Theme wählen</div>
-    <div id="themePills" class="theme-row"></div>
-    <div class="row" style="justify-content:flex-end">
-      <button id="btnCloseTheme">Fertig</button>
-    </div>
-  </div>
+<!-- Theme mini popup -->
+<div id="themePopup" class="hidden">
+  <div class="theme-mini" id="themeDots"></div>
 </div>
 
 <script src="app.js"></script>
