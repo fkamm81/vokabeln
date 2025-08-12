@@ -207,35 +207,52 @@ fbtn.addEventListener('click', ()=>{
 
 
 
-// ---- Robust button listeners ----
-(function(){
-  const fbtn = document.getElementById('btnFilters');
-  if (fbtn){
-    fbtn.addEventListener('click', ()=>{
-      const box = document.getElementById('filters');
-      if (!box) return;
+
+
+
+// === v8-quizfix6: delegated click handlers for header/footer icons ===
+document.addEventListener('click', (ev) => {
+  const t = ev.target;
+
+  // Filter toggle
+  const btnFilters = t.closest && t.closest('#btnFilters');
+  if (btnFilters) {
+    const box = document.getElementById('filters');
+    if (box) {
       const open = !box.classList.contains('open');
       box.classList.toggle('open', open);
-      fbtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      fbtn.textContent = open ? '▴' : '▾';
-    });
+      btnFilters.setAttribute('aria-expanded', open ? 'true' : 'false');
+      btnFilters.textContent = open ? '▴' : '▾';
+    }
+    return;
   }
-  const themeBtn = document.getElementById('btnTheme');
-  if (themeBtn){
-    themeBtn.addEventListener('click', ()=>{
-      const pop = document.getElementById('themePopup');
-      if (!pop) return;
+
+  // Theme popup
+  const btnTheme = t.closest && t.closest('#btnTheme');
+  if (btnTheme) {
+    const pop = document.getElementById('themePopup');
+    if (pop) {
       if (pop.classList.contains('hidden')) openThemePopup(); else closeThemePopup();
-    });
+    }
+    return;
   }
-  const parentBtn = document.getElementById('btnParent');
-  if (parentBtn){
-    parentBtn.addEventListener('click', ()=>{
-      const modal = document.getElementById('parentModal');
-      if (!modal) return;
+
+  // Parent modal
+  const btnParent = t.closest && t.closest('#btnParent');
+  if (btnParent) {
+    const modal = document.getElementById('parentModal');
+    if (modal) {
       modal.classList.remove('hidden');
       document.body.classList.add('no-scroll');
       renderParent();
-    });
+    }
+    return;
   }
-})();
+
+  // Close theme popup when clicking outside
+  const pop = document.getElementById('themePopup');
+  if (pop && !pop.classList.contains('hidden')) {
+    if (!pop.contains(t) && !t.closest('#btnTheme')) { closeThemePopup(); }
+  }
+});
+

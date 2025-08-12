@@ -103,3 +103,11 @@ html, body, #app { overflow-x: hidden; }
 .panel, .controls, .tabs, .actions { min-width: 0; }
 button, select, input { max-width: 100%; }
 #matchGrid button { white-space: normal; }
+
+
+/* v8-quizfix6: ensure icon buttons are clickable */
+.iconbtn{ pointer-events:auto; }
+footer{ position: relative; z-index: 10; }
+#themePopup{ z-index: 110; }
+.modal{ z-index: 120; }
+.toast{ pointer-events:none; } /* safety */
