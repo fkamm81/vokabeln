@@ -75,3 +75,30 @@ button, select, input { max-width: 100%; }
 #matchGrid button { white-space: normal; }
 
 /* no extra css changes for v8-quizfix3 */
+
+
+/* Icon-only buttons */
+.iconbtn{
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  width: 40px; height: 40px;
+  display: inline-grid; place-items: center;
+  font-size: 20px; line-height: 1;
+}
+#btnFilters { display:inline-flex; align-items:center; gap:2px; }
+#btnFilters svg { display:block; }
+#btnFilters .chev { transition: transform .2s ease; }
+#filters.open + * {}
+#filters.open {}
+/* Rotate chevron when open */
+#filters.open ~ .dummy { } /* placeholder */
+.filter-open #btnFilters .chev { transform: rotate(180deg); }
+
+/* Theme dots: ensure visible regardless of global button styling */
+.theme-mini .theme-dot{
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 2px solid #0004; cursor: pointer;
+}
+.theme-mini .theme-dot.active{ outline: 3px solid var(--accent); }

@@ -15,11 +15,11 @@ load();
 
 function applyTheme(id){const t=state.themes.find(x=>x.id===id)||state.themes[0];state.theme=t.id;save();const r=document.documentElement;
 r.style.setProperty('--bg',t.vars.bg);r.style.setProperty('--panel',t.vars.panel);r.style.setProperty('--accent',t.vars.accent);r.style.setProperty('--text',t.vars.text);r.style.setProperty('--btn',t.vars.btn||'#0d1b2a');
-$$("select, button, input[type='text'], input[type='number']").forEach(el=>{el.style.background='var(--btn)';el.style.color='var(--text)';});}
+}
 function openThemePopup(){const pop=$("#themePopup");const dots=$("#themeDots");dots.innerHTML='';state.themes.forEach(t=>{const b=document.createElement('button');b.className='theme-dot'+(state.theme===t.id?' active':'');b.style.background=t.vars.accent;b.title=t.name;b.onclick=()=>{applyTheme(t.id);$$('#themeDots .theme-dot').forEach((x,i)=>x.classList.toggle('active',state.themes[i].id===state.theme));};dots.appendChild(b);});pop.classList.remove('hidden');}
 function closeThemePopup(){ $("#themePopup").classList.add('hidden'); }
-function toast(msg,id='turtle'){const t=document.createElement('div');t.className='toast';t.innerHTML=`<div class="msg"><svg><use href="assets/mascots.svg#${id}"/></svg><div>${msg}</div></div>`;document.body.appendChild(t);setTimeout(()=>t.remove(),1800);}
-function cheer(){toast(['Langsam ist auch schnell!','Sprung geschafft!','Weiter so!'][Math.floor(Math.random()*3)],['turtle','frog','sheep'][Math.floor(Math.random()*3)])}
+function toast(){ /* toasts disabled */ }"/></svg><div>${msg}</div></div>`;document.body.appendChild(t);setTimeout(()=>t.remove(),1800);}
+function cheer(){ /* cheer disabled */ }
 function P(){return state.profiles[state.activeKid]}
 function setKid(n){state.activeKid=n;save();refreshKpis();renderProgress();}
 function refreshKpis(){$("#xp").textContent=P().xp;$("#streak").textContent=P().streak;$("#kidBadge").textContent=state.activeKid;}
@@ -205,3 +205,20 @@ fbtn.addEventListener('click', ()=>{
   fbtn.textContent = open ? '▴' : '▾';
 });
 
+
+
+// Filters collapse (robust, with aria + chevron)
+(() => {
+  const fbtn = document.getElementById('btnFilters');
+  const box = document.getElementById('filters');
+  if (!fbtn || !box) return;
+  const setState = (open) => {
+    box.classList.toggle('open', open);
+    fbtn.setAttribute('aria-expanded', String(open));
+    document.documentElement.classList.toggle('filter-open', open);
+  };
+  fbtn.addEventListener('click', () => {
+    const open = !box.classList.contains('open');
+    setState(open);
+  });
+})();
