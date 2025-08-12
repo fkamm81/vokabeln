@@ -1,0 +1,21 @@
+{
+  "name": "Vokabelhelden – Latein & Englisch",
+  "short_name": "Vokabelhelden",
+  "description": "Offline‑fähige Lernapp mit Flashcards, Quiz, Hören, Sprechen, Zuordnen und Schreiben – inkl. XP, Streaks und Elternbereich.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0b132b",
+  "theme_color": "#3a86ff",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

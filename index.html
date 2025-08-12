@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#3a86ff" />
+  <title>Vokabelhelden – Latein & Englisch</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-5.7 4.1L18.9 21 12 16.9 5.1 21l2.6-7.9L2 9h7z"/></svg>
+      <div>Vokabelhelden</div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><span id="xp">0</span> XP</div>
+      <div class="kpi">🔥 <span id="streak">0</span></div>
+    </div>
+  </header>
+
+  <main>
+    <div class="panel grid" id="topbar">
+      <div class="controls">
+        <select id="langSelect" title="Sprache">
+          <option value="latin">Latein → Deutsch</option>
+          <option value="latin_rev">Deutsch → Latein</option>
+          <option value="english">Englisch → Deutsch</option>
+          <option value="english_rev">Deutsch → Englisch</option>
+        </select>
+        <select id="lessonSelect" multiple size="1" title="Lektionen"></select>
+        <button id="btnImport" class="secondary">CSV/JSON importieren</button>
+        <input id="fileInput" type="file" accept=".csv,.json" class="hidden">
+        <button id="btnTheme" class="ghost">🌙/☀️</button>
+      </div>
+      <div id="mascot">
+        <svg><use href="assets/mascots.svg#turtle"/></svg>
+        <div class="speech" id="quote">Salve! Heute rocken wir Lektionen – bereit?</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tabs" id="tabs">
+        <div class="tab active" data-tab="flash">Flashcards</div>
+        <div class="tab" data-tab="quiz">Quiz</div>
+        <div class="tab" data-tab="listen">Hören</div>
+        <div class="tab" data-tab="speak">Sprechen</div>
+        <div class="tab" data-tab="match">Zuordnen</div>
+        <div class="tab" data-tab="write">Schreiben</div>
+        <div class="tab" data-tab="parent">Eltern</div>
+      </div>
+
+      <section class="activity" id="flash">
+        <div class="card big" id="flashCard">Importiere zunächst Daten (CSV/JSON) und wähle Lektionen.</div>
+        <div class="actions">
+          <button id="btnShow" class="wide">Auflösung zeigen</button>
+          <button id="btnEasy">Leicht ✅</button>
+          <button id="btnGood">Gut 🙂</button>
+          <button id="btnHard">Schwer 🤔</button>
+        </div>
+        <div class="hint">Spaced Repetition aktiv. Nächste Fälligkeit wird gespeichert.</div>
+      </section>
+
+      <section class="activity hidden" id="quiz">
+        <div class="card big" id="quizPrompt">–</div>
+        <div class="actions" id="quizOptions"></div>
+      </section>
+
+      <section class="activity hidden" id="listen">
+        <div class="card big" id="listenPrompt">🎧 Wir sprechen dir das Wort vor. Schreib die Übersetzung.</div>
+        <input id="listenInput" type="text" placeholder="Antwort tippen…">
+        <div class="actions">
+          <button id="btnSpeak">Nochmal anhören 🔊</button>
+          <button id="btnCheckListen" class="wide">Prüfen</button>
+        </div>
+      </section>
+
+      <section class="activity hidden" id="speak">
+        <div class="card big" id="speakPrompt">🎙️ Sprich die Übersetzung. (Falls Mikro nicht unterstützt, nutze Selbstkontrolle.)</div>
+        <div class="actions">
+          <button id="btnStartRec">Aufnahme starten</button>
+          <button id="btnStopRec" class="secondary">Stop</button>
+          <button id="btnSelfOk" class="wide">Ich hab's richtig ✅</button>
+        </div>
+        <div class="hint" id="recOut"></div>
+      </section>
+
+      <section class="activity hidden" id="match">
+        <div class="card big" id="matchGrid">Tippe jeweils Begriff ↔ Bedeutung an.</div>
+      </section>
+
+      <section class="activity hidden" id="write">
+        <div class="card big" id="writePrompt">Schreibe die Übersetzung:</div>
+        <input id="writeInput" type="text" placeholder="Antwort">
+        <div class="actions">
+          <button id="btnCheckWrite" class="wide">Prüfen</button>
+        </div>
+      </section>
+
+      <section class="activity hidden" id="parent">
+        <div class="grid">
+          <div class="card">
+            <div class="big">Tägliches Ziel</div>
+            <div class="controls">
+              <label>Lektionen (kommasep.): <input id="goalLessons" type="text" placeholder="z.B. 1,2"></label>
+              <label>Minuten: <input id="goalMinutes" type="number" min="5" step="5" value="15"></label>
+              <button id="btnSaveGoal">Speichern</button>
+            </div>
+            <div class="hint">Ziel gilt pro Tag und pro Kind. Fortschritt siehe unten.</div>
+          </div>
+          <div class="panel">
+            <div class="big">Fortschritt</div>
+            <div id="progressList" class="list"></div>
+          </div>
+          <label class="switch"><input id="reminders" type="checkbox"> Tägliche Erinnerung (Benachrichtigung 17:00)</label>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div>📱 Als App installieren: Im Browser „Zum Home‑Bildschirm“.</div>
+    <div>🔒 Alles bleibt lokal auf dem Gerät.</div>
+  </footer>
+</div>
+
+<script src="app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
+</script>
+</body>
+</html>
