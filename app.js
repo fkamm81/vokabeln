@@ -1,42 +1,79 @@
 
-// ===== Utilities & Storage =====
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
-const DBKEY = 'vocab-helden-v1';
+const DBKEY = 'vocab-helden-v2';
 const state = {
-  data: [], // normalized: {id, lesson, de, la, en}
-  due: [],  // ids due now (flashcards)
-  current: null,
+  data: [], // {id, book, base:'latin'|'english', lesson, de, la, en}
   mode: 'flash',
-  lang: 'latin',
-  kids: ['Kind A','Kind B'],
-  activeKid: 0,
-  xp: 0,
-  streak: 0,
-  lastDay: null,
-  reviewsToday: 0,
-  goals: { lessons: [], minutes: 15 },
-  scheduleNoti: false,
-  perCard: {} // id -> {EF, interval, due, reps}
+  lang: 'latin', // practice direction
+  book: null,
+  themes: [
+    {id:'ocean', name:'Ocean', vars:{bg:'#0b132b', panel:'#1c2541', accent:'#3a86ff', text:'#f6f7fb', btn:'#0d1b2a'}},
+    {id:'forest', name:'Forest', vars:{bg:'#0b2b1a', panel:'#163822', accent:'#34d399', text:'#eafff3', btn:'#0a1f14'}},
+    {id:'sunset', name:'Sunset', vars:{bg:'#2b0b14', panel:'#3a1421', accent:'#ff7a59', text:'#fff4f0', btn:'#2a0e15'}},
+    {id:'contrast', name:'Kontrast', vars:{bg:'#000000', panel:'#111111', accent:'#ffd60a', text:'#ffffff', btn:'#1c1c1c'}},
+  ],
+  theme: 'ocean',
+  profiles: {}, // name -> {xp, streak, lastDay, reviewsToday, perCard, goals:{lessons, minutes}, scheduleNoti}
+  activeKid: null
 };
+
+function defaultProfile(){
+  return { xp:0, streak:0, lastDay:null, reviewsToday:0, perCard:{}, goals:{lessons:[], minutes:15}, scheduleNoti:false };
+}
 
 function load() {
   try {
     const saved = JSON.parse(localStorage.getItem(DBKEY) || '{}');
     Object.assign(state, saved);
-    if (state.lastDay && new Date(state.lastDay).toDateString() !== new Date().toDateString()) {
-      state.reviewsToday = 0;
+    if (!state.activeKid) {
+      state.profiles["Kind 1"] = state.profiles["Kind 1"] || defaultProfile();
+      state.profiles["Kind 2"] = state.profiles["Kind 2"] || defaultProfile();
+      state.activeKid = "Kind 1";
+    }
+    for (const k in state.profiles){
+      const p = state.profiles[k];
+      if (p.lastDay && new Date(p.lastDay).toDateString() !== new Date().toDateString()) {
+        p.reviewsToday = 0;
+      }
     }
   } catch(e){ console.warn(e); }
 }
 function save() {
-  const {data, perCard, xp, streak, lastDay, reviewsToday, goals, scheduleNoti, lang} = state;
-  localStorage.setItem(DBKEY, JSON.stringify({data, perCard, xp, streak, lastDay, reviewsToday, goals, scheduleNoti, lang}));
+  localStorage.setItem(DBKEY, JSON.stringify(state));
 }
 load();
 
-// Quotes + mascots
+// Themes
+function applyTheme(id){
+  const theme = state.themes.find(t=>t.id===id) || state.themes[0];
+  state.theme = theme.id; save();
+  const root = document.documentElement;
+  root.style.setProperty('--bg', theme.vars.bg);
+  root.style.setProperty('--panel', theme.vars.panel);
+  root.style.setProperty('--accent', theme.vars.accent);
+  root.style.setProperty('--text', theme.vars.text);
+  root.style.setProperty('--btn', theme.vars.btn || '#0d1b2a');
+  $$("select, button, input[type='text'], input[type='number']").forEach(el=>{
+    el.style.background = 'var(--btn)';
+    el.style.color = 'var(--text)';
+  });
+  renderThemePills();
+}
+function renderThemePills(){
+  const wrap = $("#themePills"); if (!wrap) return;
+  wrap.innerHTML='';
+  state.themes.forEach(t=>{
+    const b = document.createElement('button');
+    b.className = 'theme-pill'+(state.theme===t.id?' active':'');
+    b.textContent = t.name;
+    b.addEventListener('click', ()=> applyTheme(t.id));
+    wrap.appendChild(b);
+  });
+}
+
+// Toast + Mascot
 const QUOTES = [
   ["turtle","Langsam ist auch schnell – Schritt für Schritt!"],
   ["frog","Sprung! Ein Punkt mehr in Richtung Meisterschaft!"],
@@ -45,24 +82,29 @@ const QUOTES = [
   ["frog","Quak! Neue XP erbeutet!"],
   ["sheep","Wolllah! Weiter so!"]
 ];
-function cheer() {
-  const [id, text] = QUOTES[Math.floor(Math.random()*QUOTES.length)];
-  $("#mascot use").setAttribute('href', `assets/mascots.svg#${id}`);
-  $("#quote").textContent = text;
-  toast(text);
-}
-
-function toast(msg) {
+function toast(msg, mascotId='turtle') {
   let t = document.createElement('div');
   t.className = 'toast';
-  t.innerHTML = `<div class="msg">${msg}</div>`;
+  t.innerHTML = `<div class="msg"><svg><use href="assets/mascots.svg#${mascotId}"/></svg><div>${msg}</div></div>`;
   document.body.appendChild(t);
   setTimeout(()=>t.remove(), 1800);
 }
+function cheer() {
+  const [id, text] = QUOTES[Math.floor(Math.random()*QUOTES.length)];
+  toast(text, id);
+}
 
-// ===== CSV/JSON Import =====
+// Profiles
+function P(){ return state.profiles[state.activeKid]; }
+function setKid(name){ state.activeKid = name; save(); refreshKpis(); renderProgress(); }
+function refreshKpis(){
+  $("#xp").textContent = P().xp;
+  $("#streak").textContent = P().streak;
+  $("#kidBadge").textContent = state.activeKid;
+}
+
+// CSV/JSON import with books
 function parseCSV(text) {
-  // Tiny CSV parser with quotes support
   const rows = [];
   let row = [], field = '', inQuotes = false;
   for (let i=0;i<text.length;i++) {
@@ -81,8 +123,7 @@ function parseCSV(text) {
   return rows.map(r => Object.fromEntries(header.map((h,i)=>[h, r[i]])));
 }
 
-function normalize(records) {
-  // Try to infer columns: deutsch/de, latein/lat/la, englisch/en, lektion/lesson
+function normalize(records, book, base) {
   const norm = [];
   for (const r of records) {
     const keys = Object.fromEntries(Object.keys(r).map(k=>[k.toLowerCase(), k]));
@@ -90,17 +131,27 @@ function normalize(records) {
     const la = r[keys.latein] ?? r[keys.latin] ?? r[keys.lat] ?? r[keys.la] ?? '';
     const en = r[keys.englisch] ?? r[keys.english] ?? r[keys.en] ?? '';
     const lesson = r[keys.lektion] ?? r[keys.lesson] ?? r[keys.lektion_nr] ?? r[keys.kapitel] ?? r[keys['lektion ']] ?? '1';
-    if ((de && la) || (de && en)) {
-      norm.push({ id: crypto.randomUUID(), lesson: String(lesson).trim(), de: (de||'').trim(), la: (la||'').trim(), en: (en||'').trim() });
+    if ((de && la) || (de && en) || (la && en)) {
+      norm.push({ id: crypto.randomUUID(), book: book, base: base, lesson: String(lesson).trim(), de: (de||'').trim(), la: (la||'').trim(), en: (en||'').trim() });
     }
   }
   return norm;
 }
-
-function populateLessons() {
-  const sel = $("#lessonSelect");
-  sel.innerHTML = '';
-  const lessons = [...new Set(state.data.map(d=>d.lesson))].sort((a,b)=> (a*1)-(b*1));
+function allBooks(){ return [...new Set(state.data.map(d=>d.book))].filter(Boolean).sort(); }
+function populateBooks(){
+  const sel = $("#bookSelect"); sel.innerHTML='';
+  const books = allBooks();
+  if (!books.length){ state.book = null; const opt = document.createElement('option'); opt.textContent='(kein Buch)'; sel.appendChild(opt); return; }
+  books.forEach(b=>{
+    const opt = document.createElement('option'); opt.value=b; opt.textContent=b; sel.appendChild(opt);
+  });
+  if (!state.book || !books.includes(state.book)) state.book = books[0];
+  sel.value = state.book;
+}
+function populateLessons(){
+  const sel = $("#lessonSelect"); sel.innerHTML='';
+  const pool = state.data.filter(d=> d.book===state.book && baseForMode()===d.base);
+  const lessons = [...new Set(pool.map(d=>d.lesson))].sort((a,b)=> (a*1)-(b*1));
   for (const L of lessons) {
     const opt = document.createElement('option');
     opt.value = L; opt.textContent = 'Lektion ' + L;
@@ -108,31 +159,7 @@ function populateLessons() {
   }
 }
 
-$("#btnImport").addEventListener('click', ()=> $("#fileInput").click());
-$("#fileInput").addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const text = await file.text();
-  let records = [];
-  if (file.name.endsWith('.json')) {
-    records = JSON.parse(text);
-  } else {
-    records = parseCSV(text);
-  }
-  const items = normalize(records);
-  if (!items.length) { toast('Konnte keine Vokabeln erkennen.'); return; }
-  // merge (avoid duplicates by de+la/en)
-  const key = (o)=> (o.de+'|'+(o.la||'')+'|'+(o.en||''));
-  const existing = new Set(state.data.map(key));
-  for (const it of items) if (!existing.has(key(it))) state.data.push(it);
-  save();
-  populateLessons();
-  toast(`Import ok: ${items.length} Einträge`);
-  buildDue();
-  nextCard();
-});
-
-// ===== Scheduling / Notifications (best-effort local) =====
+// Notifications
 async function ensureNotifications() {
   if (!('Notification' in window)) return false;
   if (Notification.permission === 'granted') return true;
@@ -142,53 +169,70 @@ async function ensureNotifications() {
   }
   return false;
 }
-
-function scheduleDailyReminder(hour=17) {
-  // Local non-persistent reminder: when app opens after target hour and lastSeen < today, show a notification.
-  state.scheduleNoti = true; save();
+function scheduleDailyReminder(hour=17){
+  P().scheduleNoti = true; save();
   ensureNotifications().then(granted => {
     if (!granted) { toast('Benachrichtigungen nicht erlaubt.'); return; }
     const check = () => {
       const now = new Date();
-      if (now.getHours() >= hour && localStorage.getItem('remindedDay') !== now.toDateString()) {
-        new Notification('Vokabelhelden', { body:'Kurze Vokabelrunde? 🔥', badge:'icons/icon-192.png', icon:'icons/icon-192.png' });
-        localStorage.setItem('remindedDay', now.toDateString());
+      if (now.getHours() >= hour && (localStorage.getItem('remindedDay_'+state.activeKid) !== now.toDateString())) {
+        new Notification('Vokabelhelden', { body:`${state.activeKid}: kurze Vokabelrunde? 🔥`, badge:'icons/icon-192.png', icon:'icons/icon-192.png' });
+        localStorage.setItem('remindedDay_'+state.activeKid, now.toDateString());
       }
     };
     check();
-    setInterval(check, 60*60*1000); // hourly while app is open
+    setInterval(check, 60*60*1000);
   });
 }
 
-// ===== Streak & XP =====
+// XP/Streak
 function addXP(n=5) {
-  state.xp += n;
+  const p = P();
+  p.xp += n;
   const todayStr = new Date().toDateString();
-  if (state.lastDay !== todayStr) {
-    const y = new Date(state.lastDay||Date.now()-86400000);
+  if (p.lastDay !== todayStr) {
+    const y = new Date(p.lastDay||Date.now()-86400000);
     const diff = Math.floor((new Date(todayStr) - new Date(y.toDateString()))/86400000);
-    state.streak = (diff === 1) ? (state.streak+1) : 1;
-    state.lastDay = todayStr;
+    p.streak = (diff === 1) ? (p.streak+1) : 1;
+    p.lastDay = todayStr;
   }
-  state.reviewsToday++;
+  p.reviewsToday++;
   save();
-  $("#xp").textContent = state.xp;
-  $("#streak").textContent = state.streak;
+  refreshKpis();
 }
 
-// ===== Spaced Repetition (SM-2 light) =====
+// SR helpers
+function baseForMode(){ return (state.lang.startsWith('latin'))?'latin':'english'; }
+function fieldsForMode() {
+  switch(state.lang){
+    case 'latin': return ['la', 'de'];
+    case 'latin_rev': return ['de', 'la'];
+    case 'english': return ['en', 'de'];
+    case 'english_rev': return ['de', 'en'];
+  }
+}
+function chosenLessons(){
+  const sel = $("#lessonSelect");
+  const chosen = Array.from(sel.selectedOptions).map(o=>o.value);
+  return chosen;
+}
+function poolItems(){
+  const base = baseForMode();
+  const pool = state.data.filter(d => d.book===state.book && d.base===base && (chosenLessons().length? chosenLessons().includes(d.lesson): true));
+  return pool;
+}
 function buildDue() {
   const now = Date.now();
-  state.due = state.data.filter(d => {
-    const s = state.perCard[d.id];
+  const p = P();
+  p.due = poolItems().filter(d => {
+    const s = p.perCard[d.id];
     return !s || !s.due || s.due <= now;
   }).map(d=>d.id);
 }
-
 function reviewOutcome(quality) {
-  // quality: 0..5 (hard=2, good=4, easy=5)
+  const p = P();
   const id = state.current?.id; if (!id) return;
-  let s = state.perCard[id] || { EF: 2.5, interval: 0, reps: 0, due: 0 };
+  let s = p.perCard[id] || { EF: 2.5, interval: 0, reps: 0, due: 0 };
   if (quality < 3) { s.reps = 0; s.interval = 1; }
   else {
     s.reps += 1;
@@ -199,7 +243,7 @@ function reviewOutcome(quality) {
   }
   const days = Math.max(1, s.interval);
   s.due = Date.now() + days*86400000;
-  state.perCard[id] = s;
+  p.perCard[id] = s;
   addXP(5 + (quality>=4?3:0));
   save();
   cheer();
@@ -207,49 +251,66 @@ function reviewOutcome(quality) {
   nextCard();
 }
 
-// ===== Language helpers =====
-function fieldsForMode() {
-  switch(state.lang){
-    case 'latin': return ['la', 'de'];
-    case 'latin_rev': return ['de', 'la'];
-    case 'english': return ['en', 'de'];
-    case 'english_rev': return ['de', 'en'];
+// Fuzzy checking
+function normalizeText(t){
+  return (t||'').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-zäöüß \-]/g,'').replace(/\s+/g,' ').trim();
+}
+function levenshtein(a,b){
+  a = normalizeText(a); b = normalizeText(b);
+  const m = a.length, n = b.length;
+  if (m===0) return n; if (n===0) return m;
+  const dp = new Array(n+1);
+  for (let j=0;j<=n;j++) dp[j]=j;
+  for (let i=1;i<=m;i++){
+    let prev = dp[0]; dp[0]=i;
+    for (let j=1;j<=n;j++){
+      const temp = dp[j];
+      const cost = a[i-1]===b[j-1]?0:1;
+      dp[j] = Math.min(dp[j]+1, dp[j-1]+1, prev+cost);
+      prev = temp;
+    }
   }
+  return dp[n];
+}
+function isFuzzyMatch(ans, want){
+  const A = normalizeText(ans), W = normalizeText(want);
+  if (!A || !W) return false;
+  if (A===W) return true;
+  const d = levenshtein(A,W);
+  const tol = Math.max(1, Math.floor(W.length*0.2));
+  return d <= tol;
 }
 
-function filterByLessons() {
-  const sel = $("#lessonSelect");
-  const chosen = Array.from(sel.selectedOptions).map(o=>o.value);
-  const all = chosen.length? state.data.filter(d=>chosen.includes(d.lesson)) : state.data;
-  return all;
-}
-
-// ===== Activities =====
+// Activities
 function nextCard() {
-  if (!state.data.length) { $("#flashCard").textContent = "Bitte Daten importieren."; return; }
+  if (!state.data.length || !state.book) { $("#flashCard").textContent = "Bitte Daten importieren und Buch wählen."; return; }
   const [qField, aField] = fieldsForMode();
-  // pick due first
-  const pool = filterByLessons().filter(d => state.due.includes(d.id));
-  const arr = pool.length ? pool : filterByLessons();
+  const p = P();
+  const pool = poolItems();
+  if (!pool.length){ $("#flashCard").textContent = "Keine passenden Vokabeln in diesem Buch/Modus."; return; }
+  const dueIds = (p.due||[]).filter(id => pool.some(x=>x.id===id));
+  const arr = dueIds.length ? pool.filter(d=>dueIds.includes(d.id)) : pool;
   const pick = arr[Math.floor(Math.random()*arr.length)];
   state.current = pick;
   $("#flashCard").textContent = pick[qField] || '–';
   $("#flashCard").dataset.answer = pick[aField] || '–';
+  $("#writePrompt").textContent = (pick[qField] ? `Schreibe die Übersetzung von: “${pick[qField]}”` : 'Schreiben');
+  $("#listenPrompt").textContent = (pick[qField] ? `🎧 Höre zu und übersetze: “${pick[qField]}”` : '🎧');
 }
 
 $("#btnShow").addEventListener('click', ()=>{
   $("#flashCard").innerHTML = `<div>${state.current ? (state.current[fieldsForMode()[0]]||'') : ''}</div>
   <div class="badge">${state.current ? (state.current[fieldsForMode()[1]]||'') : ''}</div>`;
 });
-
 $("#btnEasy").addEventListener('click', ()=> reviewOutcome(5));
 $("#btnGood").addEventListener('click', ()=> reviewOutcome(4));
 $("#btnHard").addEventListener('click', ()=> reviewOutcome(2));
 
-// Quiz
 function buildQuiz() {
-  const pool = filterByLessons();
-  if (pool.length < 4) { $("#quizPrompt").textContent="Bitte mehr Vokabeln importieren."; return; }
+  const pool = poolItems();
+  if (pool.length < 4) { $("#quizPrompt").textContent="Bitte mehr Vokabeln importieren."; $("#quizOptions").innerHTML=''; return; }
   const [qField, aField] = fieldsForMode();
   const correct = pool[Math.floor(Math.random()*pool.length)];
   $("#quizPrompt").textContent = correct[qField];
@@ -260,12 +321,13 @@ function buildQuiz() {
   wrap.innerHTML = '';
   for (const opt of shuffled) {
     const b = document.createElement('button'); b.textContent = opt; b.addEventListener('click', ()=>{
-      if (opt === correct[aField]) { addXP(5); cheer(); buildQuiz(); }
-      else { toast('Knapp daneben – weiter!'); }
+      if (isFuzzyMatch(opt, correct[aField])) { addXP(5); cheer(); buildQuiz(); }
+      else { toast('Knapp daneben – weiter!', 'sheep'); }
     });
     wrap.appendChild(b);
   }
 }
+
 // Listen
 const synth = window.speechSynthesis;
 function speak(text, lang) {
@@ -280,15 +342,14 @@ $("#btnSpeak").addEventListener('click', ()=>{
   const langCode = (qField==='la') ? 'la' : (qField==='en' ? 'en-US' : 'de-DE');
   speak(state.current[qField], langCode);
 });
-
 $("#btnCheckListen").addEventListener('click', ()=>{
-  const ans = $("#listenInput").value.trim().toLowerCase();
-  const want = (state.current?.[fieldsForMode()[1]]||'').toLowerCase();
-  if (ans && want && (ans === want)) { addXP(6); cheer(); $("#listenInput").value=''; nextCard(); }
-  else toast(`Gesucht: ${want}`);
+  const ans = $("#listenInput").value;
+  const want = (state.current?.[fieldsForMode()[1]]||'');
+  if (isFuzzyMatch(ans, want)) { addXP(6); cheer(); $("#listenInput").value=''; nextCard(); }
+  else toast(`Gesucht: ${want}`, 'frog');
 });
 
-// Speak (Web Speech API)
+// Speak
 let rec;
 $("#btnStartRec").addEventListener('click', ()=>{
   const w = window;
@@ -299,12 +360,12 @@ $("#btnStartRec").addEventListener('click', ()=>{
   rec.start(); $("#recOut").textContent = '…hört zu';
 });
 $("#btnStopRec").addEventListener('click', ()=>{ try{ rec && rec.stop(); }catch{} });
-
 $("#btnSelfOk").addEventListener('click', ()=>{ addXP(4); cheer(); });
 
 // Match
 function buildMatch() {
-  const pool = filterByLessons().slice().sort(()=>Math.random()-0.5).slice(0,6);
+  const pool = poolItems().slice().sort(()=>Math.random()-0.5).slice(0,6);
+  if (!pool.length){ $("#matchGrid").textContent='Bitte passende Daten importieren.'; return; }
   const [qField, aField] = fieldsForMode();
   const left = pool.map(x=>({id:x.id, t:x[qField]}));
   const right = pool.map(x=>({id:x.id, t:x[aField]})).sort(()=>Math.random()-0.5);
@@ -319,10 +380,9 @@ function buildMatch() {
         sel[side] = it.id;
         b.classList.add('badge');
         if (sel.L && sel.R) {
-          if (sel.L === sel.R) { addXP(3); cheer(); // remove matched
-            col.querySelector(`[data-id="${sel[side]}"]`)?.remove();
-            wrap.querySelector(`[data-id="${sel[side]}"]`)?.remove();
-          } else { toast('Nicht ganz – probier weiter!'); $$('#matchGrid .badge').forEach(x=>x.classList.remove('badge')); }
+          if (sel.L === sel.R) { addXP(3); cheer();
+            wrap.querySelectorAll(`[data-id="${sel[side]}"]`).forEach(el=>el.remove());
+          } else { toast('Nicht ganz – probier weiter!', 'sheep'); $$('#matchGrid .badge').forEach(x=>x.classList.remove('badge')); }
           sel.L = sel.R = null;
           if (!wrap.querySelector('[data-id]')) buildMatch();
         }
@@ -340,10 +400,10 @@ function buildMatch() {
 
 // Write
 $("#btnCheckWrite").addEventListener('click', ()=>{
-  const ans = $("#writeInput").value.trim().toLowerCase();
-  const want = (state.current?.[fieldsForMode()[1]]||'').toLowerCase();
-  if (ans && want && (ans === want)) { addXP(6); cheer(); $("#writeInput").value=''; nextCard(); }
-  else toast(`Gesucht: ${want}`);
+  const ans = $("#writeInput").value;
+  const want = (state.current?.[fieldsForMode()[1]]||'');
+  if (isFuzzyMatch(ans, want)) { addXP(6); cheer(); $("#writeInput").value=''; nextCard(); }
+  else toast(`Gesucht: ${want}`, 'frog');
 });
 
 // Tabs
@@ -358,54 +418,94 @@ $("#tabs").addEventListener('click', (e)=>{
   save();
 });
 
-// Language & lessons
-$("#langSelect").addEventListener('change', (e)=>{ state.lang = e.target.value; save(); nextCard(); if (state.mode==='quiz') buildQuiz(); if (state.mode==='match') buildMatch(); });
+// Language, book, lessons
+$("#langSelect").addEventListener('change', (e)=>{ state.lang = e.target.value; save(); populateLessons(); buildDue(); nextCard(); if (state.mode==='quiz') buildQuiz(); if (state.mode==='match') buildMatch(); });
+$("#bookSelect").addEventListener('change', (e)=>{ state.book = e.target.value; save(); populateLessons(); buildDue(); nextCard(); if (state.mode==='quiz') buildQuiz(); if (state.mode==='match') buildMatch(); });
 $("#lessonSelect").addEventListener('change', ()=>{ buildDue(); nextCard(); if (state.mode==='quiz') buildQuiz(); if (state.mode==='match') buildMatch(); });
 
-// Theme
-let dark = true;
-$("#btnTheme").addEventListener('click', ()=>{
-  dark = !dark;
-  document.documentElement.style.setProperty('--bg', dark?'#0b132b':'#f7f7fb');
-  document.documentElement.style.setProperty('--panel', dark?'#1c2541':'#ffffff');
-  document.documentElement.style.setProperty('--text', dark?'#0b132b':'#0b132b');
-  document.body.style.color = dark?'#f6f7fb':'#0b132b';
+// Footer parent button + modal
+$("#btnParent").addEventListener('click', ()=>{ $("#parentModal").classList.remove('hidden'); renderParent(); });
+$("#btnCloseParent").addEventListener('click', ()=> $("#parentModal").classList.add('hidden'));
+
+// Parent modal
+function renderParent(){
+  const sel = $("#kidSelect"); sel.innerHTML='';
+  Object.keys(state.profiles).forEach(name=>{
+    const opt = document.createElement('option'); opt.value=name; opt.textContent=name; sel.appendChild(opt);
+  });
+  sel.value = state.activeKid;
+  $("#goalLessons").value = (P().goals.lessons||[]).join(', ');
+  $("#goalMinutes").value = P().goals.minutes||15;
+  $("#reminders").checked = !!P().scheduleNoti;
+  renderProgress();
+}
+$("#kidSelect").addEventListener('change', (e)=>{ setKid(e.target.value); });
+$("#btnAddKid").addEventListener('click', ()=>{
+  const name = prompt('Name des Kindes?');
+  if (!name) return;
+  if (state.profiles[name]) { alert('Name existiert bereits.'); return; }
+  state.profiles[name] = defaultProfile();
+  setKid(name);
+  renderParent();
+  save();
 });
 
-// Parent: goals + reminders + progress
 $("#btnSaveGoal").addEventListener('click', ()=>{
-  state.goals.lessons = $("#goalLessons").value.split(',').map(s=>s.trim()).filter(Boolean);
-  state.goals.minutes = parseInt($("#goalMinutes").value||'15',10);
+  P().goals.lessons = $("#goalLessons").value.split(',').map(s=>s.trim()).filter(Boolean);
+  P().goals.minutes = parseInt($("#goalMinutes").value||'15',10);
   save(); toast('Ziel gespeichert.');
 });
 $("#reminders").addEventListener('change', (e)=>{
   if (e.target.checked) scheduleDailyReminder(17);
-  else { state.scheduleNoti=false; save(); toast('Erinnerungen deaktiviert.'); }
+  else { P().scheduleNoti=false; save(); toast('Erinnerungen deaktiviert.'); }
+});
+
+$("#btnImport").addEventListener('click', async ()=>{
+  const file = $("#fileInput").files[0];
+  const book = $("#bookName").value.trim();
+  const base = $("#baseLang").value;
+  if (!file || !book) { toast('Datei und Buchname angeben.', 'sheep'); return; }
+  const text = await file.text();
+  let records = [];
+  if (file.name.endsWith('.json')) { records = JSON.parse(text); } else { records = parseCSV(text); }
+  const items = normalize(records, book, base);
+  if (!items.length) { toast('Konnte keine Vokabeln erkennen.', 'sheep'); return; }
+  const key = (o)=> [o.book, o.base, o.de||'', o.la||'', o.en||''].join('|');
+  const existing = new Set(state.data.map(key));
+  let added = 0;
+  for (const it of items) if (!existing.has(key(it))) { state.data.push(it); added++; }
+  save();
+  populateBooks();
+  $("#bookSelect").value = book; state.book = book;
+  populateLessons();
+  buildDue(); nextCard();
+  toast(`Import ok: ${added} Einträge`, 'turtle');
 });
 
 function renderProgress() {
-  const list = $("#progressList"); list.innerHTML='';
-  const today = new Date().toLocaleDateString();
+  const list = $("#progressList"); if (!list) return; list.innerHTML='';
+  const p = P();
   const items = [
-    `Heute: ${state.reviewsToday} Aufgaben, ${state.xp} XP gesamt`,
-    `Streak: ${state.streak} Tage`,
-    state.goals.lessons.length ? `Ziel‑Lektionen heute: ${state.goals.lessons.join(', ')}` : 'Kein Lektionen‑Ziel gesetzt',
-    `Zeit‑Ziel: ${state.goals.minutes} Minuten`
+    `Heute: ${p.reviewsToday} Aufgaben, ${p.xp} XP gesamt`,
+    `Streak: ${p.streak} Tage`,
+    p.goals.lessons?.length ? `Ziel‑Lektionen heute: ${p.goals.lessons.join(', ')}` : 'Kein Lektionen‑Ziel gesetzt',
+    `Zeit‑Ziel: ${p.goals.minutes} Minuten`,
+    state.book ? `Aktuelles Buch: ${state.book}` : 'Kein Buch gewählt'
   ];
   for (const it of items) {
     const div = document.createElement('div'); div.textContent = it; list.appendChild(div);
   }
 }
 
-function init() {
-  $("#xp").textContent = state.xp;
-  $("#streak").textContent = state.streak;
+// Init
+function init(){
+  applyTheme(state.theme);
+  const sel = $("#themePills");
+  populateBooks();
   populateLessons();
+  refreshKpis();
   buildDue();
   nextCard();
-  renderProgress();
-  if (state.scheduleNoti) scheduleDailyReminder(17);
-  // preload a fun cheer
-  setTimeout(cheer, 1200);
+  setTimeout(cheer, 1000);
 }
 init();

@@ -1,5 +1,5 @@
 
-const CACHE = 'vocab-pwa-v1';
+const CACHE = 'vocab-pwa-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -25,7 +25,6 @@ self.addEventListener('fetch', (e) => {
   e.respondWith(
     caches.match(e.request).then(res => {
       return res || fetch(e.request).then(resp => {
-        // cache same-origin GETs
         if (url.origin === location.origin) {
           const clone = resp.clone();
           caches.open(CACHE).then(c => c.put(e.request, clone));

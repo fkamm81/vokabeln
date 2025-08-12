@@ -19,26 +19,22 @@
     <div class="kpis">
       <div class="kpi"><span id="xp">0</span> XP</div>
       <div class="kpi">🔥 <span id="streak">0</span></div>
+      <div class="kpi" id="kidBadge">👧👦</div>
     </div>
   </header>
 
   <main>
     <div class="panel grid" id="topbar">
       <div class="controls">
-        <select id="langSelect" title="Sprache">
+        <select id="bookSelect" title="Buch"></select>
+        <select id="langSelect" title="Übungsrichtung">
           <option value="latin">Latein → Deutsch</option>
           <option value="latin_rev">Deutsch → Latein</option>
           <option value="english">Englisch → Deutsch</option>
           <option value="english_rev">Deutsch → Englisch</option>
         </select>
         <select id="lessonSelect" multiple size="1" title="Lektionen"></select>
-        <button id="btnImport" class="secondary">CSV/JSON importieren</button>
-        <input id="fileInput" type="file" accept=".csv,.json" class="hidden">
-        <button id="btnTheme" class="ghost">🌙/☀️</button>
-      </div>
-      <div id="mascot">
-        <svg><use href="assets/mascots.svg#turtle"/></svg>
-        <div class="speech" id="quote">Salve! Heute rocken wir Lektionen – bereit?</div>
+        <div id="themePills" class="theme-row"></div>
       </div>
     </div>
 
@@ -50,11 +46,10 @@
         <div class="tab" data-tab="speak">Sprechen</div>
         <div class="tab" data-tab="match">Zuordnen</div>
         <div class="tab" data-tab="write">Schreiben</div>
-        <div class="tab" data-tab="parent">Eltern</div>
       </div>
 
       <section class="activity" id="flash">
-        <div class="card big" id="flashCard">Importiere zunächst Daten (CSV/JSON) und wähle Lektionen.</div>
+        <div class="card big" id="flashCard">Importiere Daten im Elternbereich und wähle Buch & Lektionen.</div>
         <div class="actions">
           <button id="btnShow" class="wide">Auflösung zeigen</button>
           <button id="btnEasy">Leicht ✅</button>
@@ -93,45 +88,71 @@
       </section>
 
       <section class="activity hidden" id="write">
-        <div class="card big" id="writePrompt">Schreibe die Übersetzung:</div>
+        <div class="card big"><div id="writePrompt">Schreibe die Übersetzung:</div></div>
         <input id="writeInput" type="text" placeholder="Antwort">
         <div class="actions">
           <button id="btnCheckWrite" class="wide">Prüfen</button>
-        </div>
-      </section>
-
-      <section class="activity hidden" id="parent">
-        <div class="grid">
-          <div class="card">
-            <div class="big">Tägliches Ziel</div>
-            <div class="controls">
-              <label>Lektionen (kommasep.): <input id="goalLessons" type="text" placeholder="z.B. 1,2"></label>
-              <label>Minuten: <input id="goalMinutes" type="number" min="5" step="5" value="15"></label>
-              <button id="btnSaveGoal">Speichern</button>
-            </div>
-            <div class="hint">Ziel gilt pro Tag und pro Kind. Fortschritt siehe unten.</div>
-          </div>
-          <div class="panel">
-            <div class="big">Fortschritt</div>
-            <div id="progressList" class="list"></div>
-          </div>
-          <label class="switch"><input id="reminders" type="checkbox"> Tägliche Erinnerung (Benachrichtigung 17:00)</label>
         </div>
       </section>
     </div>
   </main>
 
   <footer>
-    <div>📱 Als App installieren: Im Browser „Zum Home‑Bildschirm“.</div>
-    <div>🔒 Alles bleibt lokal auf dem Gerät.</div>
+    <div>📱 Als App installieren</div>
+    <div style="display:flex; gap:8px;">
+      <button id="btnParent" class="smallbtn iconbtn" title="Elternbereich">👨‍👧‍👦</button>
+    </div>
   </footer>
 </div>
 
+<!-- Elternbereich Modal -->
+<div id="parentModal" class="modal hidden">
+  <div class="box">
+    <div class="big">Elternbereich</div>
+    <div class="row">
+      <label>Aktives Kind:
+        <select id="kidSelect"></select>
+      </label>
+      <button id="btnAddKid">Kind hinzufügen</button>
+    </div>
+    <div class="row">
+      <div class="panel" style="flex:1">
+        <div class="big">Import</div>
+        <div class="row">
+          <input id="bookName" type="text" placeholder="Buchtitel (z.B. Adeamus 1)">
+          <select id="baseLang">
+            <option value="latin">Buchsprache: Latein</option>
+            <option value="english">Buchsprache: Englisch</option>
+          </select>
+        </div>
+        <div class="row">
+          <input id="fileInput" type="file" accept=".csv,.json">
+          <button id="btnImport" class="smallbtn">Importieren</button>
+        </div>
+        <div class="hint">Jeder Import wird mit Buch & Sprache getaggt. Lektionen werden automatisch erkannt.</div>
+      </div>
+      <div class="panel" style="flex:1">
+        <div class="big">Tägliches Ziel</div>
+        <div class="row">
+          <label>Lektionen (kommasep.): <input id="goalLessons" type="text" placeholder="z.B. 1,2"></label>
+          <label>Minuten: <input id="goalMinutes" type="number" min="5" step="5" value="15"></label>
+          <label class="switch"><input id="reminders" type="checkbox"> Tägliche Erinnerung 17:00</label>
+        </div>
+        <button id="btnSaveGoal">Speichern</button>
+        <div class="hint">Ziel gilt pro Tag und pro Kind.</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="big">Fortschritt</div>
+      <div id="progressList" class="list"></div>
+    </div>
+    <div class="row" style="justify-content:flex-end">
+      <button id="btnCloseParent">Schließen</button>
+    </div>
+  </div>
+</div>
+
 <script src="app.js"></script>
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
-  }
-</script>
+<script> if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); } </script>
 </body>
 </html>

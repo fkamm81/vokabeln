@@ -1,7 +1,7 @@
 {
-  "name": "Vokabelhelden – Latein & Englisch",
+  "name": "Vokabelhelden – Bücher & Themes",
   "short_name": "Vokabelhelden",
-  "description": "Offline‑fähige Lernapp mit Flashcards, Quiz, Hören, Sprechen, Zuordnen und Schreiben – inkl. XP, Streaks und Elternbereich.",
+  "description": "Vokabel-PWA mit Büchern, Themes, Profilen, XP/Streak & Offline.",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#0b132b",
