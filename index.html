@@ -142,6 +142,79 @@
 
 <div id="themePopup" class="hidden"><div class="theme-mini" id="themeDots"></div></div>
 
+
+<!-- EARLY DEBUG + FALLBACK HANDLERS -->
+<script>
+(function(){
+  // Create banner early
+  var b = document.getElementById('dbgBanner');
+  if(!b){
+    b = document.createElement('div');
+    b.id = 'dbgBanner';
+    b.setAttribute('role','status');
+    b.style.position='fixed';
+    b.style.top='10px';
+    b.style.left='50%';
+    b.style.transform='translateX(-50%)';
+    b.style.background='rgba(0,0,0,.75)';
+    b.style.color='#fff';
+    b.style.padding='8px 12px';
+    b.style.borderRadius='12px';
+    b.style.fontSize='14px';
+    b.style.zIndex='10000';
+    b.style.pointerEvents='none';
+    b.style.maxWidth='90vw';
+    b.style.textAlign='center';
+    b.style.display='none';
+    document.body.appendChild(b);
+  }
+  function show(msg){
+    try{
+      b.textContent = String(msg);
+      b.style.display='block';
+      clearTimeout(window.__dbgHide);
+      window.__dbgHide = setTimeout(function(){ b.style.display='none'; }, 1400);
+    }catch(e){}
+  }
+  window.__DBG_SHOW = show;
+  window.addEventListener('error', function(e){ show('JS-Fehler: '+ (e.message||e)); });
+  window.addEventListener('unhandledrejection', function(e){ show('Promise-Fehler'); });
+
+  function byId(id){ return document.getElementById(id); }
+  function safeBind(id, fn){
+    var el = byId(id);
+    if (!el) return;
+    el.addEventListener('click', function(ev){
+      show(id+': Klick');
+      try{ fn(ev); }catch(err){ show('Handler-Fehler '+id); }
+    }, {capture:true});
+  }
+
+  // Minimal fallback actions, unabhängig von app.js
+  safeBind('btnFilters', function(){
+    var box = document.getElementById('filters');
+    if (!box){ show('filters nicht gefunden'); return; }
+    var open = !box.classList.contains('open');
+    if (open) box.classList.add('open'); else box.classList.remove('open');
+    var btn = document.getElementById('btnFilters');
+    if (btn){ btn.setAttribute('aria-expanded', open?'true':'false'); btn.textContent = open ? '▴' : '▾'; }
+  });
+
+  safeBind('btnTheme', function(){
+    var pop = document.getElementById('themePopup');
+    if (!pop){ show('themePopup nicht gefunden'); return; }
+    pop.classList.toggle('hidden');
+  });
+
+  safeBind('btnParent', function(){
+    var modal = document.getElementById('parentModal');
+    if (!modal){ show('parentModal nicht gefunden'); return; }
+    modal.classList.remove('hidden');
+    document.body.classList.add('no-scroll');
+  });
+})();
+</script>
+
 <script src="app.js"></script>
 <script> if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); } </script>
 
