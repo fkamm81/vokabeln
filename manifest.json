@@ -1,7 +1,7 @@
 {
-  "name": "Vokabelhelden – v9",
+  "name": "Vokabelhelden – v8",
   "short_name": "Vokabelhelden",
-  "description": "Kinderfreundliche Vokabel-PWA (Latein/Englisch). SRS in allen Modi. Fixes für Quiz/Schreiben.",
+  "description": "Vokabel-PWA (Latein & Englisch) mit SRS in allen Modi.",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#0b132b",
