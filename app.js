@@ -2,7 +2,7 @@
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
-const DBKEY = 'vocab-helden-v3';
+const DBKEY = 'vocab-helden-v4';
 const state = {
   data: [], // {id, book, base:'latin'|'english', lesson, de, la, en}
   mode: 'flash',
@@ -42,9 +42,7 @@ function load() {
     }
   } catch(e){ console.warn(e); }
 }
-function save() {
-  localStorage.setItem(DBKEY, JSON.stringify(state));
-}
+function save() { localStorage.setItem(DBKEY, JSON.stringify(state)); }
 load();
 
 // Themes
@@ -70,16 +68,16 @@ function openThemePopup(){
     d.className = 'theme-dot'+(state.theme===t.id?' active':'');
     d.style.background = t.vars.accent;
     d.title = t.name;
-    d.addEventListener('click', ()=>{ applyTheme(t.id); renderThemeDots(); });
+    d.addEventListener('click', ()=>{ applyTheme(t.id); renderDots(); });
     dots.appendChild(d);
   });
-  function renderThemeDots(){
+  function renderDots(){
     $$("#themeDots .theme-dot").forEach((b,i)=>{
       const id = state.themes[i].id;
       b.classList.toggle('active', id===state.theme);
     });
   }
-  renderThemeDots();
+  renderDots();
   pop.classList.remove('hidden');
 }
 function closeThemePopup(){ $("#themePopup").classList.add('hidden'); }
@@ -161,7 +159,6 @@ function populateBooks(){
 }
 
 function availableLangOptions(){
-  // Filter language directions based on selected book's base language
   const pool = state.data.filter(d=> d.book===state.book);
   const bases = new Set(pool.map(d=>d.base));
   const opts = [];
@@ -312,6 +309,9 @@ function levenshtein(a,b){
   }
   return dp[n];
 }
+function splitAlternatives(s){
+  return String(s||'').split(/[,/;]| oder |\bor\b/).map(x=>x.trim()).filter(Boolean);
+}
 function isFuzzyMatch(ans, want){
   const A = normalizeText(ans);
   const alts = splitAlternatives(want).map(normalizeText);
@@ -322,9 +322,6 @@ function isFuzzyMatch(ans, want){
     const tol = Math.max(1, Math.floor(W.length*0.2));
     return d <= tol;
   });
-}
-function splitAlternatives(s){
-  return String(s||'').split(/[,/;]| oder |\bor\b/).map(x=>x.trim()).filter(Boolean);
 }
 
 // Activities
@@ -342,12 +339,12 @@ function nextCard() {
   $("#flashCard").dataset.answer = pick[aField] || '–';
   $("#writePrompt").textContent = (pick[qField] ? `Was bedeutet „${pick[qField]}“?` : 'Was bedeutet …?');
   $("#writeFeedback").textContent = '';
+  $("#writeCard").classList.remove('ok','bad'); // reset border state
   $("#listenPrompt").textContent = (pick[qField] ? `🎧 Höre zu und übersetze: “${pick[qField]}”` : '🎧');
   // prepare write UI
   $("#writeInput").value='';
   $("#btnCheckWrite").textContent = 'Prüfen';
   state.writeAwaitNext = false;
-  // focus input if in write mode
   if (!$('#write').classList.contains('hidden')) {
     setTimeout(()=> $("#writeInput")?.focus(), 50);
   }
@@ -361,7 +358,7 @@ $("#btnEasy").addEventListener('click', ()=> reviewOutcome(5));
 $("#btnGood").addEventListener('click', ()=> reviewOutcome(4));
 $("#btnHard").addEventListener('click', ()=> reviewOutcome(2));
 
-// QUIZ (robust round object + feedback)
+// QUIZ with per-round lock + visual feedback
 function buildQuiz() {
   const pool = poolItems();
   const prompt = $("#quizPrompt"), wrap = $("#quizOptions");
@@ -373,18 +370,16 @@ function buildQuiz() {
   const options = new Set([correctText]);
   while (options.size < 4) options.add(pool[Math.floor(Math.random()*pool.length)][aField]);
   const shuffled = [...options].sort(()=>Math.random()-0.5);
-  state.quizRound = { correct: correctText }; // store plain text
+  state.quizRound = { correct: correctText };
   wrap.innerHTML = '';
   shuffled.forEach(opt => {
     const b = document.createElement('button'); b.textContent = opt;
     b.addEventListener('click', ()=>{
-      // lock buttons for this round
       $$("#quizOptions button").forEach(x=> x.disabled = true);
       const good = isFuzzyMatch(opt, state.quizRound.correct);
       b.classList.add(good?'ok':'bad');
       setTimeout(()=>{
         if (good){ addXP(5); cheer(); }
-        // build new round
         buildQuiz();
       }, 550);
     });
@@ -444,14 +439,13 @@ function buildMatch() {
       const b = document.createElement('button'); b.textContent = it.t; b.dataset.id = it.id;
       b.addEventListener('click', ()=>{
         if (side==='L'){
-          // toggle left selection
-          $$('#matchGrid [data-id]').forEach(x=> x.classList.remove('badge','ok','bad','selected'));
+          // keep highlight until a right pick
+          $$('#matchGrid .selected').forEach(x=> x.classList.remove('selected'));
           selectedLeft = it.id;
-          b.classList.add('selected'); // keep highlighted
+          b.classList.add('selected');
         } else {
           if (!selectedLeft){ b.classList.add('bad'); setTimeout(()=>b.classList.remove('bad'), 500); return; }
           const isMatch = selectedLeft === it.id;
-          // visual feedback
           const leftBtn = wrap.querySelector(`[data-id="${selectedLeft}"]`);
           if (isMatch){
             leftBtn.classList.add('ok'); b.classList.add('ok');
@@ -478,7 +472,7 @@ function buildMatch() {
   wrap.appendChild(cont);
 }
 
-// WRITE with focus + in-card feedback + "Weiter"
+// WRITE with focus + in-card feedback + "Weiter" and reset border afterwards
 $("#btnCheckWrite").addEventListener('click', ()=>{
   if (state.writeAwaitNext){ nextCard(); $("#writeInput").focus(); return; }
   const ans = $("#writeInput").value;
@@ -495,7 +489,7 @@ $("#btnCheckWrite").addEventListener('click', ()=>{
   } else {
     fb.textContent = `Gesucht: ${full}`;
     $("#writeCard").classList.add('bad'); $("#writeCard").classList.remove('ok');
-    setTimeout(()=> $("#writeCard").classList.remove('bad'), 700);
+    // lässt weiteres Tippen zu (kein Lock)
   }
 });
 $("#writeInput").addEventListener('keydown', (e)=>{
@@ -520,11 +514,7 @@ $("#langSelect").addEventListener('change', (e)=>{ state.lang = e.target.value; 
 $("#bookSelect").addEventListener('change', (e)=>{ state.book = e.target.value; save(); populateLangSelect(); populateLessons(); buildDue(); nextCard(); if (state.mode==='quiz') buildQuiz(); if (state.mode==='match') buildMatch(); });
 $("#lessonSelect").addEventListener('change', ()=>{ buildDue(); nextCard(); if (state.mode==='quiz') buildQuiz(); if (state.mode==='match') buildMatch(); });
 
-// Footer parent button + modal, lock background scroll
-$("#btnParent").addEventListener('click', ()=>{ $("#parentModal").classList.remove('hidden'); document.body.classList.add('no-scroll'); renderParent(); });
-$("#btnCloseParent").addEventListener('click', ()=> { $("#parentModal").classList.add('hidden'); document.body.classList.remove('no-scroll'); });
-
-// Theme button
+// Footer: theme popup
 $("#btnTheme").addEventListener('click', (e)=>{
   const pop = $("#themePopup");
   if (pop.classList.contains('hidden')) openThemePopup(); else closeThemePopup();
@@ -533,6 +523,18 @@ document.addEventListener('click', (e)=>{
   const pop = $("#themePopup");
   if (!pop.classList.contains('hidden') && !pop.contains(e.target) && e.target.id!=='btnTheme'){ closeThemePopup(); }
 });
+
+// Filters collapse
+$("#btnFilters").addEventListener('click', ()=>{
+  const box = $("#filters");
+  const open = !box.classList.contains('open');
+  box.classList.toggle('open', open);
+  $("#btnFilters").textContent = open? 'Ausblenden' : 'Einblenden';
+});
+
+// Footer parent button + modal, lock background scroll
+$("#btnParent").addEventListener('click', ()=>{ $("#parentModal").classList.remove('hidden'); document.body.classList.add('no-scroll'); renderParent(); });
+$("#btnCloseParent").addEventListener('click', ()=> { $("#parentModal").classList.add('hidden'); document.body.classList.remove('no-scroll'); });
 
 // Parent modal
 function renderParent(){

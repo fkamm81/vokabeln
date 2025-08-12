@@ -25,11 +25,16 @@
 
   <main>
     <div class="panel grid" id="topbar">
-      <div class="controls">
-        <select id="bookSelect" title="Buch"></select>
-        <select id="langSelect" title="Übungsrichtung"></select>
-        <select id="lessonSelect" multiple size="1" title="Lektionen"></select>
-        <button id="btnTheme" class="smallbtn" title="Theme">🎨</button>
+      <div id="filtersToggle">
+        <div><strong>Filter</strong></div>
+        <button id="btnFilters" class="smallbtn">Einblenden</button>
+      </div>
+      <div id="filters">
+        <div class="controls">
+          <select id="bookSelect" title="Buch"></select>
+          <select id="langSelect" title="Übungsrichtung"></select>
+          <select id="lessonSelect" multiple size="1" title="Lektionen"></select>
+        </div>
       </div>
     </div>
 
@@ -95,6 +100,7 @@
   <footer>
     <div>📱 Als App installieren</div>
     <div style="display:flex; gap:8px;">
+      <button id="btnTheme" class="smallbtn iconbtn" title="Theme">🎨</button>
       <button id="btnParent" class="smallbtn iconbtn" title="Elternbereich">👨‍👧‍👦</button>
     </div>
   </footer>
