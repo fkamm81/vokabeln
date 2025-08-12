@@ -24,7 +24,7 @@
 
   <main>
     <div class="panel grid" id="topbar">
-      <div id="filtersToggle"><div><strong>Filter</strong></div><button id="btnFilters" class="iconbtn" aria-label="Filter umschalten" aria-expanded="false"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18l-6.5 7v5l-5 2v-7L3 5z"/></svg><svg class="chev" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5z"/></svg></button></div>
+      <div id="filtersToggle"><div><strong>Filter</strong></div><button id="btnFilters" class="iconbtn" aria-label="Filter umschalten" aria-expanded="false">▾</button></div>
       <div id="filters">
         <div class="controls">
           <select id="bookSelect" title="Buch"></select>
@@ -95,11 +95,11 @@
   </main>
 
   <footer>
-    <div style="display:flex; gap:8px; margin-left:auto;">
-      <button id="btnTheme" class="iconbtn" title="Theme">🎨</button>
-      <button id="btnParent" class="iconbtn" title="Elternbereich">👨‍👧‍👦</button>
-    </div>
-  </footer>
+  <div style="display:flex; gap:12px; margin-left:auto;">
+    <button id="btnTheme" class="iconbtn" aria-label="Theme">🎨</button>
+    <button id="btnParent" class="iconbtn" aria-label="Elternbereich">👨‍👧‍👦</button>
+  </div>
+</footer>
 </div>
 
 <div id="parentModal" class="modal hidden" aria-modal="true" role="dialog">
