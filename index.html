@@ -203,7 +203,14 @@
   safeBind('btnTheme', function(){
     var pop = document.getElementById('themePopup');
     if (!pop){ show('themePopup nicht gefunden'); return; }
-    pop.classList.toggle('hidden');
+    try {
+      if (typeof openThemePopup === 'function' && typeof closeThemePopup === 'function') {
+        if (pop.classList.contains('hidden')) openThemePopup(); else closeThemePopup();
+      } else {
+        // Fallback: show box at least
+        pop.classList.toggle('hidden');
+      }
+    } catch(e){ show('Theme-Handler-Fehler'); }
   });
 
   safeBind('btnParent', function(){
@@ -213,10 +220,28 @@
     document.body.classList.add('no-scroll');
   });
 })();
+  safeBind('btnCloseParent', function(){
+    var modal = document.getElementById('parentModal');
+    if (!modal){ show('parentModal nicht gefunden'); return; }
+    modal.classList.add('hidden');
+    document.body.classList.remove('no-scroll');
+  });
 </script>
 
-<script src="app.js"></script>
-<script> if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); } </script>
+<script src="app.js">  safeBind('btnCloseParent', function(){
+    var modal = document.getElementById('parentModal');
+    if (!modal){ show('parentModal nicht gefunden'); return; }
+    modal.classList.add('hidden');
+    document.body.classList.remove('no-scroll');
+  });
+</script>
+<script> if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }   safeBind('btnCloseParent', function(){
+    var modal = document.getElementById('parentModal');
+    if (!modal){ show('parentModal nicht gefunden'); return; }
+    modal.classList.add('hidden');
+    document.body.classList.remove('no-scroll');
+  });
+</script>
 
 <div id="dbgBanner" role="status" aria-live="polite"></div>
 </body></html>

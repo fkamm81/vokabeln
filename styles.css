@@ -137,3 +137,8 @@ footer{ position: relative; z-index: 10; }
 
 /* ensure early debug banner visible even without app.js */
 #dbgBanner{ backdrop-filter: blur(4px); }
+
+
+/* ensure theme popup is clearly visible */
+#themePopup { min-width: 160px; }
+#themePopup .theme-mini { flex-wrap: wrap; }
