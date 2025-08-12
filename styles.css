@@ -73,3 +73,5 @@ html, body, #app { overflow-x: hidden; }
 .panel, .controls, .tabs, .actions { min-width: 0; }
 button, select, input { max-width: 100%; }
 #matchGrid button { white-space: normal; }
+
+/* no extra css changes for v8-quizfix3 */
