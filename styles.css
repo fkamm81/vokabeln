@@ -1,5 +1,5 @@
 
-:root{--bg:#0b132b;--panel:#1c2541;--accent:#3a86ff;--accent-2:#ffbe0b;--ok:#2ec4b6;--warn:#ff595e;--text:#f6f7fb;--muted:#b6c2e0;--radius:18px;--gap:12px;--tap:56px;--shadow:0 8px 24px rgba(0,0,0,.25);--font:ui-rounded,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;}
+:root{--bg:#0b132b;--panel:#1c2541;--accent:#3a86ff;--accent-2:#ffbe0b;--ok:#2ec4b6;--warn:#ff595e;--text:#f6f7fb;--muted:#b6c2e0;--radius:18px;--gap:12px;--tap:56px;--shadow:0 8px 24px rgba(0,0,0,.25);--font:ui-rounded,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
 *{box-sizing:border-box;touch-action:manipulation}
 html,body{height:100%}
 body{margin:0;background:linear-gradient(180deg,var(--bg),#0e1a39);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased}
@@ -15,7 +15,6 @@ main{padding:12px 16px;display:grid;grid-template-rows:auto 1fr;gap:var(--gap)}
 .controls{display:flex;gap:10px;flex-wrap:wrap}
 select,button,input[type="text"],input[type="number"]{background:#0d1b2a;color:var(--text);border:none;border-radius:14px;padding:12px 14px;min-height:var(--tap);font-size:16px;outline:none}
 button{background:var(--accent);font-weight:800}
-button.secondary{background:#243b63}
 .grid{display:grid;gap:var(--gap)}
 .activity{display:grid;gap:12px;margin-top:8px}
 .card{background:#0d1b2a;border-radius:16px;padding:18px;text-align:center;min-height:160px;display:grid;place-items:center}
@@ -38,15 +37,17 @@ button.bad,.bad{outline:3px solid var(--warn)}
 #filters{display:none}
 #filters.open{display:block}
 #writeFeedback{font-size:18px}
-/* Icon-only buttons */
 .iconbtn{background:transparent!important;border:none!important;box-shadow:none!important;padding:0!important;width:36px;height:36px;display:grid;place-items:center;font-size:20px;line-height:1;cursor:pointer}
 footer{position:relative;z-index:10}
 #themePopup{position:fixed;bottom:64px;right:16px;background:var(--panel);border-radius:14px;padding:10px;box-shadow:var(--shadow);z-index:110;min-width:180px}
 .theme-mini{display:flex;gap:8px;flex-wrap:wrap}
 .theme-dot{width:28px;height:28px;border-radius:50%;border:2px solid #0003;cursor:pointer}
 .theme-dot.active{outline:3px solid var(--accent)}
-/* No horizontal scroll */
 html,body,#app{overflow-x:hidden}
 .panel,.controls,.tabs,.actions{min-width:0}
 button,select,input{max-width:100%}
 #matchGrid button{white-space:normal}
+/* modal */
+.modal{ position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 120; }
+.modal.hidden{ display: none; }
+.modal .box{ width: min(94vw, 720px); max-height: 90vh; overflow: auto; border-radius: 16px; }

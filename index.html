@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="de">
 <head>
@@ -7,7 +6,7 @@
   <meta name="theme-color" content="#3a86ff"/>
   <title>Vokabelhelden</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="styles.css?v=rel1">
+  <link rel="stylesheet" href="styles.css?v=r2">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
 </head>
 <body>
@@ -151,18 +150,19 @@
   <div class="theme-mini" id="themeDots"></div>
 </div>
 
-<!-- Early, robust handlers so the three icons always work -->
+<!-- Early handlers for the three icons -->
 <script>
 (function(){
   function on(id, fn){ var el=document.getElementById(id); if(!el) return; el.addEventListener('click', ev=>{ try{ fn(ev);}catch(e){} }, {capture:true}); }
   on('btnFilters', function(){ var box=document.getElementById('filters'); if(!box) return; var open=!box.classList.contains('open'); box.classList.toggle('open', open); var btn=document.getElementById('btnFilters'); if(btn){ btn.setAttribute('aria-expanded', open?'true':'false'); btn.textContent=open?'▴':'▾'; } });
   on('btnTheme', function(){ var pop=document.getElementById('themePopup'); if(!pop) return; if(typeof openThemePopup==='function'&&typeof closeThemePopup==='function'){ if(pop.classList.contains('hidden')) openThemePopup(); else closeThemePopup(); } else { pop.classList.toggle('hidden'); } });
-  on('btnParent', function(){ var modal=document.getElementById('parentModal'); if(!modal) return; modal.classList.remove('hidden'); document.body.classList.add('no-scroll'); renderParent && renderParent(); });
+  on('btnParent', function(){ var modal=document.getElementById('parentModal'); if(!modal) return; modal.classList.remove('hidden'); document.body.classList.add('no-scroll'); });
   document.addEventListener('click', (e)=>{ var b=e.target.closest && e.target.closest('#btnCloseParent'); if(b){ var m=document.getElementById('parentModal'); if(m){ m.classList.add('hidden'); document.body.classList.remove('no-scroll'); } } }, {capture:true});
+  document.addEventListener('click', (e)=>{ var m=document.getElementById('parentModal'); if(!m||m.classList.contains('hidden')) return; if(e.target===m){ m.classList.add('hidden'); document.body.classList.remove('no-scroll'); } }, {capture:true});
 })();
 </script>
 
-<script src="app.js?v=rel1"></script>
+<script src="app.js?v=r2"></script>
 <script> if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); } </script>
 </body>
 </html>
