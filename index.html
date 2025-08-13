@@ -1,18 +1,20 @@
+
 <!doctype html>
-<html lang="de"><head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="theme-color" content="#3a86ff" />
-<title>Vokabelhelden – Latein & Englisch</title>
-<link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="styles.css">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
+<html lang="de">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <meta name="theme-color" content="#3a86ff"/>
+  <title>Vokabelhelden</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css?v=rel1">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
 </head>
 <body>
 <div id="app">
   <header>
     <div class="brand">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-5.7 4.1L18.9 21 12 16.9 5.1 21l2.6-7.9L2 9h7z"/></svg>
+      <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28"><path d="M12 2l3 7h7l-5.7 4.1L18.9 21 12 16.9 5.1 21l2.6-7.9L2 9h7z"/></svg>
       <div>Vokabelhelden</div>
     </div>
     <div class="kpis">
@@ -24,7 +26,10 @@
 
   <main>
     <div class="panel grid" id="topbar">
-      <div id="filtersToggle"><div><strong>Filter</strong></div><button id="btnFilters" class="iconbtn" aria-label="Filter umschalten" aria-expanded="false">▾</button></div>
+      <div id="filtersToggle">
+        <div><strong>Filter</strong></div>
+        <button id="btnFilters" class="iconbtn" aria-label="Filter umschalten" aria-expanded="false">▾</button>
+      </div>
       <div id="filters">
         <div class="controls">
           <select id="bookSelect" title="Buch"></select>
@@ -95,39 +100,38 @@
   </main>
 
   <footer>
-  <div style="display:flex; gap:12px; margin-left:auto;">
-    <button id="btnTheme" class="iconbtn" aria-label="Theme">🎨</button>
-    <button id="btnParent" class="iconbtn" aria-label="Elternbereich">👨‍👧‍👦</button>
-  </div>
-</footer>
+    <div style="display:flex; gap:12px; margin-left:auto;">
+      <button id="btnTheme" class="iconbtn" aria-label="Theme">🎨</button>
+      <button id="btnParent" class="iconbtn" aria-label="Elternbereich">👨‍👧‍👦</button>
+    </div>
+  </footer>
 </div>
 
+<!-- Elternbereich Modal -->
 <div id="parentModal" class="modal hidden" aria-modal="true" role="dialog">
-  <div class="box">
+  <div class="box panel">
     <div class="big">Elternbereich</div>
-    <div class="row">
-      <label>Aktives Kind:<select id="kidSelect"></select></label>
+    <div class="controls" style="margin-top:8px">
+      <label>Aktives Kind: <select id="kidSelect"></select></label>
       <button id="btnAddKid">Kind hinzufügen</button>
     </div>
-    <div class="row">
-      <div class="panel" style="flex:1">
+    <div class="grid" style="grid-template-columns:1fr 1fr">
+      <div class="panel">
         <div class="big">Import</div>
-        <div class="row">
+        <div class="controls">
           <input id="bookName" type="text" placeholder="Buchtitel (z.B. Adeamus 1)">
           <select id="baseLang"><option value="latin">Buchsprache: Latein</option><option value="english">Buchsprache: Englisch</option></select>
-        </div>
-        <div class="row">
           <input id="fileInput" type="file" accept=".csv,.json">
-          <button id="btnImport" class="smallbtn">Importieren</button>
+          <button id="btnImport">Importieren</button>
         </div>
         <div id="importStatus" class="hint"></div>
       </div>
-      <div class="panel" style="flex:1">
+      <div class="panel">
         <div class="big">Tägliches Ziel</div>
-        <div class="row">
-          <label>Lektionen: <input id="goalLessons" type="text" placeholder="z.B. 1,2"></label>
+        <div class="controls">
+          <label>Lektionen: <input id="goalLessons" type="text" placeholder="1,2"></label>
           <label>Minuten: <input id="goalMinutes" type="number" min="5" step="5" value="15"></label>
-          <label class="switch"><input id="reminders" type="checkbox"> Tägliche Erinnerung 17:00</label>
+          <label><input id="reminders" type="checkbox"> Erinnerung 17:00</label>
         </div>
         <button id="btnSaveGoal">Speichern</button>
       </div>
@@ -136,112 +140,29 @@
       <div class="big">Fortschritt</div>
       <div id="progressList" class="list"></div>
     </div>
-    <div class="row" style="justify-content:flex-end"><button id="btnCloseParent">Schließen</button></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px">
+      <button id="btnCloseParent" class="secondary">Schließen</button>
+    </div>
   </div>
 </div>
 
-<div id="themePopup" class="hidden"><div class="theme-mini" id="themeDots"></div></div>
+<!-- Theme mini popup -->
+<div id="themePopup" class="hidden">
+  <div class="theme-mini" id="themeDots"></div>
+</div>
 
-
-<!-- EARLY DEBUG + FALLBACK HANDLERS -->
+<!-- Early, robust handlers so the three icons always work -->
 <script>
 (function(){
-  // Create banner early
-  var b = document.getElementById('dbgBanner');
-  if(!b){
-    b = document.createElement('div');
-    b.id = 'dbgBanner';
-    b.setAttribute('role','status');
-    b.style.position='fixed';
-    b.style.top='10px';
-    b.style.left='50%';
-    b.style.transform='translateX(-50%)';
-    b.style.background='rgba(0,0,0,.75)';
-    b.style.color='#fff';
-    b.style.padding='8px 12px';
-    b.style.borderRadius='12px';
-    b.style.fontSize='14px';
-    b.style.zIndex='10000';
-    b.style.pointerEvents='none';
-    b.style.maxWidth='90vw';
-    b.style.textAlign='center';
-    b.style.display='none';
-    document.body.appendChild(b);
-  }
-  function show(msg){
-    try{
-      b.textContent = String(msg);
-      b.style.display='block';
-      clearTimeout(window.__dbgHide);
-      window.__dbgHide = setTimeout(function(){ b.style.display='none'; }, 1400);
-    }catch(e){}
-  }
-  window.__DBG_SHOW = show;
-  window.addEventListener('error', function(e){ show('JS-Fehler: '+ (e.message||e)); });
-  window.addEventListener('unhandledrejection', function(e){ show('Promise-Fehler'); });
-
-  function byId(id){ return document.getElementById(id); }
-  function safeBind(id, fn){
-    var el = byId(id);
-    if (!el) return;
-    el.addEventListener('click', function(ev){
-      show(id+': Klick');
-      try{ fn(ev); }catch(err){ show('Handler-Fehler '+id); }
-    }, {capture:true});
-  }
-
-  // Minimal fallback actions, unabhängig von app.js
-  safeBind('btnFilters', function(){
-    var box = document.getElementById('filters');
-    if (!box){ show('filters nicht gefunden'); return; }
-    var open = !box.classList.contains('open');
-    if (open) box.classList.add('open'); else box.classList.remove('open');
-    var btn = document.getElementById('btnFilters');
-    if (btn){ btn.setAttribute('aria-expanded', open?'true':'false'); btn.textContent = open ? '▴' : '▾'; }
-  });
-
-  safeBind('btnTheme', function(){
-    var pop = document.getElementById('themePopup');
-    if (!pop){ show('themePopup nicht gefunden'); return; }
-    try {
-      if (typeof openThemePopup === 'function' && typeof closeThemePopup === 'function') {
-        if (pop.classList.contains('hidden')) openThemePopup(); else closeThemePopup();
-      } else {
-        // Fallback: show box at least
-        pop.classList.toggle('hidden');
-      }
-    } catch(e){ show('Theme-Handler-Fehler'); }
-  });
-
-  safeBind('btnParent', function(){
-    var modal = document.getElementById('parentModal');
-    if (!modal){ show('parentModal nicht gefunden'); return; }
-    modal.classList.remove('hidden');
-    document.body.classList.add('no-scroll');
-  });
+  function on(id, fn){ var el=document.getElementById(id); if(!el) return; el.addEventListener('click', ev=>{ try{ fn(ev);}catch(e){} }, {capture:true}); }
+  on('btnFilters', function(){ var box=document.getElementById('filters'); if(!box) return; var open=!box.classList.contains('open'); box.classList.toggle('open', open); var btn=document.getElementById('btnFilters'); if(btn){ btn.setAttribute('aria-expanded', open?'true':'false'); btn.textContent=open?'▴':'▾'; } });
+  on('btnTheme', function(){ var pop=document.getElementById('themePopup'); if(!pop) return; if(typeof openThemePopup==='function'&&typeof closeThemePopup==='function'){ if(pop.classList.contains('hidden')) openThemePopup(); else closeThemePopup(); } else { pop.classList.toggle('hidden'); } });
+  on('btnParent', function(){ var modal=document.getElementById('parentModal'); if(!modal) return; modal.classList.remove('hidden'); document.body.classList.add('no-scroll'); renderParent && renderParent(); });
+  document.addEventListener('click', (e)=>{ var b=e.target.closest && e.target.closest('#btnCloseParent'); if(b){ var m=document.getElementById('parentModal'); if(m){ m.classList.add('hidden'); document.body.classList.remove('no-scroll'); } } }, {capture:true});
 })();
-  safeBind('btnCloseParent', function(){
-    var modal = document.getElementById('parentModal');
-    if (!modal){ show('parentModal nicht gefunden'); return; }
-    modal.classList.add('hidden');
-    document.body.classList.remove('no-scroll');
-  });
 </script>
 
-<script src="app.js">  safeBind('btnCloseParent', function(){
-    var modal = document.getElementById('parentModal');
-    if (!modal){ show('parentModal nicht gefunden'); return; }
-    modal.classList.add('hidden');
-    document.body.classList.remove('no-scroll');
-  });
-</script>
-<script> if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }   safeBind('btnCloseParent', function(){
-    var modal = document.getElementById('parentModal');
-    if (!modal){ show('parentModal nicht gefunden'); return; }
-    modal.classList.add('hidden');
-    document.body.classList.remove('no-scroll');
-  });
-</script>
-
-<div id="dbgBanner" role="status" aria-live="polite"></div>
-</body></html>
+<script src="app.js?v=rel1"></script>
+<script> if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); } </script>
+</body>
+</html>

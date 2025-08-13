@@ -1,7 +1,6 @@
 {
-  "name": "Vokabelhelden – v8",
+  "name": "Vokabelhelden (Release)",
   "short_name": "Vokabelhelden",
-  "description": "Vokabel-PWA (Latein & Englisch) mit SRS in allen Modi.",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#0b132b",
