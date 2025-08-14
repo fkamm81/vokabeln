@@ -20,8 +20,7 @@ const state = {
   lastByMode: {},
   currentByMode: {},
   firstWrongInRound: false,
-  writeAwaitNext: false,
-  writeCorrectStreak: 0
+  writeAwaitNext: false
 };
 
 function defaultProfile(){ return { xp:0, streak:0, lastDay:null, reviewsToday:0, perCard:{}, goals:{lessons:[], minutes:15}, scheduleNoti:false }; }
@@ -370,8 +369,8 @@ $("#btnCheckWrite").addEventListener('click', ()=>{
   if(state.writeAwaitNext){ nextCard('write'); $("#writeInput").focus(); return; }
   const ans=$("#writeInput").value; const cur=getCurrent('write'); const want=(cur?.[fieldsForMode()[1]]||''); const fb=$("#writeFeedback"); const full=want;
   const exact=tolerantEquals(ans, want);
-  if(exact){ fb.textContent='Richtig: '+full; $("#writeCard").classList.add('ok'); $("#writeCard").classList.remove('bad'); reviewOutcomeOn('write',4); addXP(6); state.writeCorrectStreak = (state.writeCorrectStreak||0) + 1; if(state.writeCorrectStreak % 5 === 0){ turtleHop(); } }
-  else { fb.textContent='Gesucht: '+full; $("#writeCard").classList.add('bad'); $("#writeCard").classList.remove('ok'); reviewOutcomeOn('write',2); state.writeCorrectStreak = 0; }
+  if(exact){ fb.textContent='Richtig: '+full; $("#writeCard").classList.add('ok'); $("#writeCard").classList.remove('bad'); reviewOutcomeOn('write',4); addXP(6); }
+  else { fb.textContent='Gesucht: '+full; $("#writeCard").classList.add('bad'); $("#writeCard").classList.remove('ok'); reviewOutcomeOn('write',2); }
   $("#btnCheckWrite").textContent='Weiter'; state.writeAwaitNext=true; $("#writeInput").value='';
 });
 $("#writeInput").addEventListener('keydown', e=>{ if(e.key==='Enter') $("#btnCheckWrite").click(); });
